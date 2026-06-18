@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Palette Demo - Pattern UI/UX</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+        }
+
+        .hero p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+
+        .shortcut-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            backdrop-filter: blur(10px);
+        }
+
+        .shortcut-hint kbd {
+            background: white;
+            color: #667eea;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-family: monospace;
+        }
+
+        .demo-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .demo-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .demo-content p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .demo-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .demo-card {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .demo-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .demo-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .demo-card p {
+            color: #888;
+            font-size: 0.9em;
+            margin: 0;
+        }
+
+        /* Command Palette Styles */
+        .command-palette-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            animation: fadeIn 0.15s ease;
+        }
+
+        .command-palette-backdrop.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 15vh;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .command-palette {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            width: 90%;
+            max-width: 640px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideDown 0.2s ease;
+        }
+
+        .command-input-wrapper {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .command-input-icon {
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .command-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1.1em;
+            color: #333;
+            font-family: inherit;
+        }
+
+        .command-input::placeholder {
+            color: #999;
+        }
+
+        .command-results {
+            overflow-y: auto;
+            max-height: calc(70vh - 80px);
+            padding: 8px;
+        }
+
+        .command-category {
+            padding: 12px 16px 8px;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .command-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s;
+            margin: 2px 0;
+        }
+
+        .command-item:hover,
+        .command-item.selected {
+            background: #f5f7ff;
+            color: #667eea;
+        }
+
+        .command-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .command-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .command-item-icon {
+            font-size: 1.2em;
+            width: 24px;
+            text-align: center;
+        }
+
+        .command-item-label {
+            font-size: 0.95em;
+        }
+
+        .command-item-shortcut {
+            display: flex;
+            gap: 4px;
+            opacity: 0.6;
+        }
+
+        .command-item.selected .command-item-shortcut {
+            opacity: 0.8;
+        }
+
+        .command-item-shortcut kbd {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-family: monospace;
+            font-weight: 500;
+        }
+
+        .command-item.selected .command-item-shortcut kbd {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        .command-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .command-empty-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+
+        /* Highlight matched characters */
+        .highlight {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .command-item.selected .highlight {
+            color: white;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #333;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            display: none;
+            animation: slideUp 0.3s ease;
+            z-index: 10000;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+            
+            .hero p {
+                font-size: 1.1em;
+            }
+
+            .demo-content {
+                padding: 24px;
+            }
+
+            .command-palette {
+                width: 95%;
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="hero">
+            <h1>⚡ Command Palette</h1>
+            <p>Navigasi cepat dengan keyboard — productive & efisien</p>
+            <div class="shortcut-hint">
+                Tekan <kbd>Ctrl</kbd> + <kbd>K</kbd> atau klik tombol di bawah
+            </div>
+        </div>
+
+        <div class="demo-content">
+            <h2>Tentang Command Palette</h2>
+            <p>
+                Command Palette adalah interface pattern yang menggabungkan pencarian, navigasi, dan aksi 
+                dalam satu dialog terpusat. Pattern ini sangat populer di aplikasi modern seperti 
+                VS Code, GitHub, Slack, dan Linear.
+            </p>
+            <p>
+                <strong>Fitur utama:</strong> Keyboard-first, fuzzy search, contextual actions, 
+                dan keyboard navigation yang intuitif.
+            </p>
+
+            <div class="demo-actions">
+                <div class="demo-card" onclick="openCommandPalette()">
+                    <h3>🚀 Coba Command Palette</h3>
+                    <p>Klik atau tekan Ctrl+K</p>
+                </div>
+                <div class="demo-card" onclick="showToast('Dashboard dibuka!')">
+                    <h3>📊 Dashboard</h3>
+                    <p>Lihat overview statistik</p>
+                </div>
+                <div class="demo-card" onclick="showToast('Proyek baru dibuat!')">
+                    <h3>➕ Buat Proyek</h3>
+                    <p>Mulai proyek baru</p>
+                </div>
+                <div class="demo-card" onclick="showToast('Pengaturan dibuka!')">
+                    <h3>⚙️ Pengaturan</h3>
+                    <p>Konfigurasi aplikasi</p>
+                </div>
+                <div class="demo-card" onclick="showToast('Tim diundang!')">
+                    <h3>👥 Undang Tim</h3>
+                    <p>Tambah anggota tim</p>
+                </div>
+                <div class="demo-card" onclick="showToast('Dokumentasi dibuka!')">
+                    <h3>📚 Dokumentasi</h3>
+                    <p>Pelajari lebih lanjut</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="command-palette-backdrop" id="commandPalette" role="dialog" aria-modal="true" aria-label="Command Palette">
+        <div class="command-palette" role="combobox" aria-expanded="true" aria-haspopup="listbox">
+            <div class="command-input-wrapper">
+                <span class="command-input-icon" aria-hidden="true">🔍</span>
+                <input 
+                    type="text" 
+                    class="command-input"
+                    id="commandInput"
+                    placeholder="Ketik perintah atau cari..."
+                    role="searchbox"
+                    aria-label="Search commands"
+                    aria-controls="commandResults"
+                    autocomplete="off"
+                />
+            </div>
+            <div class="command-results" id="commandResults" role="listbox"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Command data
+        const commands = [
+            // Recent
+            { 
+                id: 'create-project', 
+                label: 'Buat Proyek Baru', 
+                icon: '➕', 
+                category: 'Recent',
+                shortcut: ['Ctrl', 'N'],
+                action: () => showToast('✅ Proyek baru dibuat!')
+            },
+            { 
+                id: 'open-settings', 
+                label: 'Buka Pengaturan', 
+                icon: '⚙️', 
+                category: 'Recent',
+                shortcut: ['Ctrl', ','],
+                action: () => showToast('⚙️ Pengaturan dibuka!')
+            },
+            
+            // Actions
+            { 
+                id: 'export-data', 
+                label: 'Export Data', 
+                icon: '📤', 
+                category: 'Actions',
+                shortcut: ['Ctrl', 'E'],
+                action: () => showToast('📤 Data sedang diexport...')
+            },
+            { 
+                id: 'import-file', 
+                label: 'Import dari File', 
+                icon: '📥', 
+                category: 'Actions',
+                action: () => showToast('📥 Pilih file untuk import...')
+            },
+            { 
+                id: 'share-workspace', 
+                label: 'Bagikan Workspace', 
+                icon: '🔗', 
+                category: 'Actions',
+                action: () => showToast('🔗 Link dibagikan!')
+            },
+            { 
+                id: 'invite-team', 
+                label: 'Undang Anggota Tim', 
+                icon: '👥', 
+                category: 'Actions',
+                action: () => showToast('📧 Undangan dikirim!')
+            },
+            
+            // Navigation
+            { 
+                id: 'go-dashboard', 
+                label: 'Ke Dashboard', 
+                icon: '📊', 
+                category: 'Navigation',
+                shortcut: ['Ctrl', 'Shift', 'D'],
+                action: () => showToast('📊 Menuju Dashboard...')
+            },
+            { 
+                id: 'go-projects', 
+                label: 'Ke Proyek', 
+                icon: '📁', 
+                category: 'Navigation',
+                shortcut: ['Ctrl', 'Shift', 'P'],
+                action: () => showToast('📁 Menuju Proyek...')
+            },
+            { 
+                id: 'go-team', 
+                label: 'Ke Tim', 
+                icon: '👨‍👩‍👧‍👦', 
+                category: 'Navigation',
+                shortcut: ['Ctrl', 'Shift', 'T'],
+                action: () => showToast('👥 Menuju Tim...')
+            },
+            { 
+                id: 'go-analytics', 
+                label: 'Ke Analytics', 
+                icon: '📈', 
+                category: 'Navigation',
+                action: () => showToast('📈 Menuju Analytics...')
+            },
+            { 
+                id: 'go-docs', 
+                label: 'Ke Dokumentasi', 
+                icon: '📚', 
+                category: 'Navigation',
+                action: () => showToast('📚 Membuka dokumentasi...')
+            },
+            
+            // Help
+            { 
+                id: 'help-center', 
+                label: 'Pusat Bantuan', 
+                icon: '❓', 
+                category: 'Help',
+                action: () => showToast('❓ Membuka pusat bantuan...')
+            },
+            { 
+                id: 'keyboard-shortcuts', 
+                label: 'Lihat Keyboard Shortcuts', 
+                icon: '⌨️', 
+                category: 'Help',
+                shortcut: ['Ctrl', '/'],
+                action: () => showToast('⌨️ Daftar shortcut...')
+            },
+            { 
+                id: 'contact-support', 
+                label: 'Hubungi Support', 
+                icon: '💬', 
+                category: 'Help',
+                action: () => showToast('💬 Menghubungi support...')
+            },
+        ];
+
+        let selectedIndex = 0;
+        let filteredCommands = [];
+        let previousFocus = null;
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Fuzzy match algorithm
+        function fuzzyMatch(query, text) {
+            if (!query) return true;
+            
+            const pattern = query.toLowerCase().split('').join('.*');
+            const regex = new RegExp(pattern);
+            return regex.test(text.toLowerCase());
+        }
+
+        // Score match for sorting
+        function scoreMatch(query, text) {
+            if (!query) return 100;
+            
+            const q = query.toLowerCase();
+            const t = text.toLowerCase();
+            
+            if (t === q) return 100;
+            if (t.startsWith(q)) return 80;
+            if (t.includes(q)) return 60;
+            if (fuzzyMatch(q, t)) return 40;
+            return 0;
+        }
+
+        // Highlight matched characters
+        function highlightMatch(text, query) {
+            if (!query) return text;
+            
+            const regex = new RegExp(`(${query.split('').join('|')})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // Render commands
+        function renderCommands(query = '') {
+            const resultsContainer = document.getElementById('commandResults');
+            
+            // Filter and sort commands
+            filteredCommands = commands
+                .map(cmd => ({
+                    ...cmd,
+                    score: scoreMatch(query, cmd.label)
+                }))
+                .filter(cmd => cmd.score > 0)
+                .sort((a, b) => b.score - a.score);
+
+            if (filteredCommands.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="command-empty">
+                        <div class="command-empty-icon">🔍</div>
+                        <div>Tidak ada hasil untuk "${query}"</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group by category
+            const grouped = {};
+            filteredCommands.forEach(cmd => {
+                if (!grouped[cmd.category]) {
+                    grouped[cmd.category] = [];
+                }
+                grouped[cmd.category].push(cmd);
+            });
+
+            // Render grouped commands
+            let html = '';
+            Object.keys(grouped).forEach(category => {
+                html += `<div class="command-category">${category}</div>`;
+                grouped[category].forEach((cmd, index) => {
+                    const globalIndex = filteredCommands.indexOf(cmd);
+                    const isSelected = globalIndex === selectedIndex;
+                    
+                    html += `
+                        <div 
+                            class="command-item ${isSelected ? 'selected' : ''}"
+                            data-index="${globalIndex}"
+                            role="option"
+                            aria-selected="${isSelected}"
+                        >
+                            <div class="command-item-left">
+                                <span class="command-item-icon">${cmd.icon}</span>
+                                <span class="command-item-label">${highlightMatch(cmd.label, query)}</span>
+                            </div>
+                            ${cmd.shortcut ? `
+                                <div class="command-item-shortcut">
+                                    ${cmd.shortcut.map(key => `<kbd>${key}</kbd>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            });
+
+            resultsContainer.innerHTML = html;
+
+            // Add click listeners
+            resultsContainer.querySelectorAll('.command-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.dataset.index);
+                    executeCommand(filteredCommands[index]);
+                });
+
+                item.addEventListener('mouseenter', () => {
+                    const index = parseInt(item.dataset.index);
+                    selectedIndex = index;
+                    renderCommands(document.getElementById('commandInput').value);
+                });
+            });
+        }
+
+        // Execute command
+        function executeCommand(command) {
+            closeCommandPalette();
+            setTimeout(() => {
+                command.action();
+            }, 100);
+        }
+
+        // Open command palette
+        function openCommandPalette() {
+            previousFocus = document.activeElement;
+            
+            const palette = document.getElementById('commandPalette');
+            const input = document.getElementById('commandInput');
+            
+            palette.classList.add('active');
+            input.value = '';
+            input.focus();
+            
+            selectedIndex = 0;
+            renderCommands();
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close command palette
+        function closeCommandPalette() {
+            const palette = document.getElementById('commandPalette');
+            palette.classList.remove('active');
+            
+            // Restore focus
+            if (previousFocus) {
+                previousFocus.focus();
+            }
+            
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+
+        // Keyboard navigation
+        document.getElementById('commandInput').addEventListener('input', (e) => {
+            selectedIndex = 0;
+            renderCommands(e.target.value);
+        });
+
+        document.getElementById('commandPalette').addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeCommandPalette();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, filteredCommands.length - 1);
+                renderCommands(document.getElementById('commandInput').value);
+                
+                // Scroll into view
+                const selected = document.querySelector('.command-item.selected');
+                if (selected) {
+                    selected.scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                renderCommands(document.getElementById('commandInput').value);
+                
+                // Scroll into view
+                const selected = document.querySelector('.command-item.selected');
+                if (selected) {
+                    selected.scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (filteredCommands[selectedIndex]) {
+                    executeCommand(filteredCommands[selectedIndex]);
+                }
+            }
+        });
+
+        // Global keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                openCommandPalette();
+            }
+        });
+
+        // Close on backdrop click
+        document.getElementById('commandPalette').addEventListener('click', (e) => {
+            if (e.target.id === 'commandPalette') {
+                closeCommandPalette();
+            }
+        });
+
+        // Prevent clicks inside palette from closing
+        document.querySelector('.command-palette').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html>
