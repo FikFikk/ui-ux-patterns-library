@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progressive Disclosure — Demo Interaktif</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .demo-grid {
+      display: grid;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .demo-card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .demo-title {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-weight: 600;
+    }
+
+    .demo-subtitle {
+      color: #718096;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+
+    /* Demo 1: Accordion */
+    .accordion {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .accordion-item {
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .accordion-item:last-child {
+      border-bottom: none;
+    }
+
+    .accordion-header {
+      width: 100%;
+      padding: 16px 20px;
+      background: white;
+      border: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #2d3748;
+      transition: background 0.2s;
+      text-align: left;
+    }
+
+    .accordion-header:hover {
+      background: #f7fafc;
+    }
+
+    .accordion-header:focus {
+      outline: 2px solid #667eea;
+      outline-offset: -2px;
+    }
+
+    .accordion-icon {
+      transition: transform 0.3s ease;
+      color: #667eea;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .accordion-header[aria-expanded="true"] .accordion-icon {
+      transform: rotate(90deg);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .accordion-content.expanded {
+      max-height: 500px;
+    }
+
+    .accordion-body {
+      padding: 0 20px 20px 20px;
+      color: #4a5568;
+      font-size: 0.95rem;
+    }
+
+    /* Demo 2: Show More */
+    .show-more-container {
+      position: relative;
+    }
+
+    .show-more-text {
+      color: #4a5568;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .show-more-text.truncated {
+      max-height: 80px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .show-more-text.truncated::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(transparent, white);
+    }
+
+    .show-more-btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .show-more-btn:hover {
+      background: #5568d3;
+    }
+
+    .show-more-btn:focus {
+      outline: 2px solid #667eea;
+      outline-offset: 2px;
+    }
+
+    /* Demo 3: Advanced Toggle */
+    .toggle-container {
+      margin-bottom: 20px;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      background: #edf2f7;
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .mode-btn {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #4a5568;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .mode-btn:focus {
+      outline: 2px solid #667eea;
+      outline-offset: 2px;
+    }
+
+    .form-section {
+      margin-top: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      color: #2d3748;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: border 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .advanced-section {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .advanced-section.visible {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Demo 4: Progressive Form */
+    .progressive-form {
+      background: #f7fafc;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .step::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      right: -50%;
+      height: 2px;
+      background: #e2e8f0;
+      z-index: 0;
+    }
+
+    .step:last-child::before {
+      display: none;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #a0aec0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-number {
+      background: #667eea;
+      color: white;
+    }
+
+    .step.completed .step-number {
+      background: #48bb78;
+      color: white;
+    }
+
+    .step.completed .step-number::after {
+      content: '✓';
+    }
+
+    .step-label {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    .step.active .step-label {
+      color: #667eea;
+    }
+
+    .form-step {
+      display: none;
+    }
+
+    .form-step.active {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #5568d3;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn:focus {
+      outline: 2px solid #667eea;
+      outline-offset: 2px;
+    }
+
+    .help-text {
+      font-size: 0.85rem;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    /* Tooltips */
+    .tooltip-trigger {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #cbd5e0;
+      color: #4a5568;
+      font-size: 0.75rem;
+      line-height: 16px;
+      text-align: center;
+      cursor: help;
+      margin-left: 6px;
+      position: relative;
+    }
+
+    .tooltip-content {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2d3748;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+    }
+
+    .tooltip-content::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #2d3748;
+    }
+
+    .tooltip-trigger:hover .tooltip-content,
+    .tooltip-trigger:focus .tooltip-content {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .demo-card {
+        padding: 20px;
+      }
+
+      .step-label {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 Progressive Disclosure</h1>
+      <p>Mengelola kompleksitas dengan mengungkap informasi secara bertahap</p>
+    </div>
+
+    <div class="demo-grid">
+      <!-- Demo 1: Accordion -->
+      <div class="demo-card">
+        <h2 class="demo-title">1. Accordion / Collapsible Sections</h2>
+        <p class="demo-subtitle">Pattern paling umum untuk grouping dan organizing konten</p>
+
+        <div class="accordion" role="region" aria-label="FAQ Accordion">
+          <div class="accordion-item">
+            <button 
+              class="accordion-header" 
+              aria-expanded="false" 
+              aria-controls="panel-1"
+              id="accordion-header-1"
+            >
+              <span>Apa itu Progressive Disclosure?</span>
+              <span class="accordion-icon" aria-hidden="true">▶</span>
+            </button>
+            <div 
+              class="accordion-content" 
+              id="panel-1"
+              role="region"
+              aria-labelledby="accordion-header-1"
+            >
+              <div class="accordion-body">
+                Progressive Disclosure adalah teknik interaction design yang menampilkan hanya informasi esensial di awal, 
+                kemudian secara bertahap mengungkap detail atau fitur advanced sesuai kebutuhan user. Tujuannya mengurangi 
+                cognitive load dan membuat interface lebih approachable.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button 
+              class="accordion-header" 
+              aria-expanded="false" 
+              aria-controls="panel-2"
+              id="accordion-header-2"
+            >
+              <span>Kapan sebaiknya menggunakan pattern ini?</span>
+              <span class="accordion-icon" aria-hidden="true">▶</span>
+            </button>
+            <div 
+              class="accordion-content" 
+              id="panel-2"
+              role="region"
+              aria-labelledby="accordion-header-2"
+            >
+              <div class="accordion-body">
+                Ideal untuk aplikasi dengan banyak fitur (>15 navigasi items), forms kompleks dengan field opsional, 
+                settings pages dengan ratusan konfigurasi, atau onboarding flows yang harus ramah pemula tapi fleksibel 
+                untuk experts. Hindari jika semua informasi sama pentingnya atau interface sudah simpel.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button 
+              class="accordion-header" 
+              aria-expanded="false" 
+              aria-controls="panel-3"
+              id="accordion-header-3"
+            >
+              <span>Bagaimana memastikan accessibility?</span>
+              <span class="accordion-icon" aria-hidden="true">▶</span>
+            </button>
+            <div 
+              class="accordion-content" 
+              id="panel-3"
+              role="region"
+              aria-labelledby="accordion-header-3"
+            >
+              <div class="accordion-body">
+                Gunakan proper ARIA attributes (aria-expanded, aria-controls, aria-labelledby), support full keyboard 
+                navigation (Tab, Enter/Space, arrow keys), pastikan visual focus indicators jelas, dan test dengan 
+                screen readers. Jangan rely pada color alone untuk indicate state.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Demo 2: Show More / Read More -->
+      <div class="demo-card">
+        <h2 class="demo-title">2. Show More / Read More</h2>
+        <p class="demo-subtitle">Truncate konten panjang dengan option untuk expand</p>
+
+        <div class="show-more-container">
+          <div class="show-more-text truncated" id="long-text">
+            Progressive disclosure bukan tentang "menyembunyikan" fitur secara permanen, melainkan mengatur timing 
+            pengungkapan informasi agar sesuai dengan mental model dan progression user dalam menyelesaikan task. 
+            Pattern ini sangat efektif untuk mengurangi cognitive load — research menunjukkan user dapat memproses 
+            maksimal 7±2 chunks informasi sekaligus (Miller's Law). Dengan progressive disclosure, interface tetap 
+            clean dan focused meski fitur bertambah banyak. Implementasi yang baik memberikan clear indicators tentang 
+            konten tersembunyi (count badges, preview text) dan memastikan expanded state mudah di-collapse kembali. 
+            Best practice termasuk lazy loading untuk performance, smooth transitions (200-300ms), dan proper focus 
+            management untuk accessibility.
+          </div>
+          <button class="show-more-btn" onclick="toggleReadMore()">
+            Tampilkan Selengkapnya ↓
+          </button>
+        </div>
+      </div>
+
+      <!-- Demo 3: Advanced Mode Toggle -->
+      <div class="demo-card">
+        <h2 class="demo-title">3. Basic vs Advanced Mode</h2>
+        <p class="demo-subtitle">Separate interface states untuk different user levels</p>
+
+        <div class="toggle-container">
+          <div class="mode-toggle" role="tablist" aria-label="Form mode">
+            <button 
+              class="mode-btn active" 
+              role="tab"
+              aria-selected="true"
+              aria-controls="basic-mode"
+              id="basic-tab"
+              onclick="switchMode('basic')"
+            >
+              Mode Basic
+            </button>
+            <button 
+              class="mode-btn" 
+              role="tab"
+              aria-selected="false"
+              aria-controls="advanced-mode"
+              id="advanced-tab"
+              onclick="switchMode('advanced')"
+            >
+              Mode Advanced
+            </button>
+          </div>
+        </div>
+
+        <form class="form-section">
+          <div class="form-group">
+            <label class="form-label" for="project-name">
+              Nama Proyek
+              <span class="tooltip-trigger" tabindex="0">
+                ?
+                <span class="tooltip-content">Nama yang akan ditampilkan di dashboard</span>
+              </span>
+            </label>
+            <input 
+              type="text" 
+              id="project-name" 
+              class="form-input" 
+              placeholder="Contoh: Website Portfolio"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="project-desc">Deskripsi (opsional)</label>
+            <input 
+              type="text" 
+              id="project-desc" 
+              class="form-input" 
+              placeholder="Jelaskan tujuan proyek"
+            />
+          </div>
+
+          <div class="advanced-section" id="advanced-fields">
+            <div class="form-group">
+              <label class="form-label" for="project-env">Environment</label>
+              <select id="project-env" class="form-input">
+                <option>Development</option>
+                <option>Staging</option>
+                <option>Production</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="project-region">Region / Datacenter</label>
+              <select id="project-region" class="form-input">
+                <option>Asia Pacific (Singapore)</option>
+                <option>Asia Pacific (Jakarta)</option>
+                <option>US East (N. Virginia)</option>
+                <option>Europe (Frankfurt)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="project-memory">Memory Allocation (MB)</label>
+              <input 
+                type="number" 
+                id="project-memory" 
+                class="form-input" 
+                value="512" 
+                min="128" 
+                max="4096"
+              />
+              <p class="help-text">Recommended: 512MB untuk most applications</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="project-timeout">Request Timeout (seconds)</label>
+              <input 
+                type="number" 
+                id="project-timeout" 
+                class="form-input" 
+                value="30" 
+                min="1" 
+                max="300"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Demo 4: Progressive Form Wizard -->
+      <div class="demo-card">
+        <h2 class="demo-title">4. Multi-Step Progressive Form</h2>
+        <p class="demo-subtitle">Wizard dengan conditional fields based on previous input</p>
+
+        <div class="progressive-form">
+          <div class="step-indicator">
+            <div class="step active" data-step="1">
+              <span class="step-number">1</span>
+              <span class="step-label">Tipe</span>
+            </div>
+            <div class="step" data-step="2">
+              <span class="step-number">2</span>
+              <span class="step-label">Detail</span>
+            </div>
+            <div class="step" data-step="3">
+              <span class="step-number">3</span>
+              <span class="step-label">Review</span>
+            </div>
+          </div>
+
+          <form id="wizard-form">
+            <!-- Step 1 -->
+            <div class="form-step active" data-step="1">
+              <div class="form-group">
+                <label class="form-label">Pilih tipe proyek:</label>
+                <select id="project-type" class="form-input">
+                  <option value="">-- Pilih --</option>
+                  <option value="web">Web Application</option>
+                  <option value="mobile">Mobile App</option>
+                  <option value="api">API / Backend</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="form-step" data-step="2">
+              <div class="form-group">
+                <label class="form-label" for="framework">Framework:</label>
+                <select id="framework" class="form-input">
+                  <option value="">-- Pilih framework --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="team-size">Ukuran Tim:</label>
+                <input type="number" id="team-size" class="form-input" min="1" value="1" />
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="form-step" data-step="3">
+              <div style="background: #edf2f7; padding: 20px; border-radius: 8px;">
+                <h3 style="margin-bottom: 12px; color: #2d3748;">Review Konfigurasi</h3>
+                <div id="review-content" style="color: #4a5568; font-size: 0.95rem;"></div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="prev-btn" onclick="prevStep()" disabled>
+                ← Sebelumnya
+              </button>
+              <button type="button" class="btn btn-primary" id="next-btn" onclick="nextStep()">
+                Selanjutnya →
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Demo 1: Accordion
+    document.querySelectorAll('.accordion-header').forEach(button => {
+      button.addEventListener('click', () => {
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        const content = document.getElementById(button.getAttribute('aria-controls'));
+        
+        button.setAttribute('aria-expanded', !expanded);
+        content.classList.toggle('expanded');
+        
+        // Optional: Close other panels (exclusive accordion)
+        // Uncomment lines below for exclusive behavior
+        /*
+        if (!expanded) {
+          document.querySelectorAll('.accordion-header').forEach(other => {
+            if (other !== button) {
+              other.setAttribute('aria-expanded', 'false');
+              document.getElementById(other.getAttribute('aria-controls')).classList.remove('expanded');
+            }
+          });
+        }
+        */
+      });
+
+      // Keyboard support
+      button.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          button.click();
+        }
+      });
+    });
+
+    // Demo 2: Show More / Read More
+    function toggleReadMore() {
+      const text = document.getElementById('long-text');
+      const btn = document.querySelector('.show-more-btn');
+      
+      if (text.classList.contains('truncated')) {
+        text.classList.remove('truncated');
+        btn.textContent = 'Tampilkan Lebih Sedikit ↑';
+      } else {
+        text.classList.add('truncated');
+        btn.textContent = 'Tampilkan Selengkapnya ↓';
+      }
+    }
+
+    // Demo 3: Advanced Mode Toggle
+    function switchMode(mode) {
+      const basicTab = document.getElementById('basic-tab');
+      const advancedTab = document.getElementById('advanced-tab');
+      const advancedFields = document.getElementById('advanced-fields');
+      
+      if (mode === 'basic') {
+        basicTab.classList.add('active');
+        advancedTab.classList.remove('active');
+        basicTab.setAttribute('aria-selected', 'true');
+        advancedTab.setAttribute('aria-selected', 'false');
+        advancedFields.classList.remove('visible');
+      } else {
+        advancedTab.classList.add('active');
+        basicTab.classList.remove('active');
+        advancedTab.setAttribute('aria-selected', 'true');
+        basicTab.setAttribute('aria-selected', 'false');
+        advancedFields.classList.add('visible');
+      }
+    }
+
+    // Demo 4: Multi-Step Form
+    let currentStep = 1;
+    const frameworkOptions = {
+      web: ['React', 'Vue', 'Angular', 'Svelte', 'Next.js'],
+      mobile: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
+      api: ['Express.js', 'FastAPI', 'Django', 'Spring Boot']
+    };
+
+    document.getElementById('project-type').addEventListener('change', (e) => {
+      const frameworkSelect = document.getElementById('framework');
+      frameworkSelect.innerHTML = '<option value="">-- Pilih framework --</option>';
+      
+      const options = frameworkOptions[e.target.value] || [];
+      options.forEach(fw => {
+        const option = document.createElement('option');
+        option.value = fw.toLowerCase().replace(/\s+/g, '-');
+        option.textContent = fw;
+        frameworkSelect.appendChild(option);
+      });
+    });
+
+    function nextStep() {
+      if (currentStep === 1) {
+        const projectType = document.getElementById('project-type').value;
+        if (!projectType) {
+          alert('Pilih tipe proyek terlebih dahulu');
+          return;
+        }
+      }
+
+      if (currentStep === 2) {
+        const framework = document.getElementById('framework').value;
+        if (!framework) {
+          alert('Pilih framework terlebih dahulu');
+          return;
+        }
+      }
+
+      if (currentStep < 3) {
+        currentStep++;
+        updateWizard();
+      } else {
+        alert('Form submitted! 🎉');
+        // Reset form
+        currentStep = 1;
+        document.getElementById('wizard-form').reset();
+        updateWizard();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateWizard();
+      }
+    }
+
+    function updateWizard() {
+      // Update step indicators
+      document.querySelectorAll('.step').forEach((step, index) => {
+        const stepNum = index + 1;
+        step.classList.remove('active', 'completed');
+        
+        if (stepNum < currentStep) {
+          step.classList.add('completed');
+        } else if (stepNum === currentStep) {
+          step.classList.add('active');
+        }
+      });
+
+      // Show current form step
+      document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.remove('active');
+      });
+      document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+
+      // Update buttons
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      
+      prevBtn.disabled = currentStep === 1;
+      nextBtn.textContent = currentStep === 3 ? 'Submit ✓' : 'Selanjutnya →';
+
+      // Update review on step 3
+      if (currentStep === 3) {
+        const projectType = document.getElementById('project-type').selectedOptions[0].textContent;
+        const framework = document.getElementById('framework').selectedOptions[0].textContent;
+        const teamSize = document.getElementById('team-size').value;
+        
+        document.getElementById('review-content').innerHTML = `
+          <p><strong>Tipe Proyek:</strong> ${projectType}</p>
+          <p><strong>Framework:</strong> ${framework}</p>
+          <p><strong>Ukuran Tim:</strong> ${teamSize} orang</p>
+        `;
+      }
+    }
+
+    // Initialize wizard
+    updateWizard();
+
+    // Keyboard shortcuts for wizard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' && !document.getElementById('next-btn').disabled) {
+        nextStep();
+      } else if (e.key === 'ArrowLeft' && !document.getElementById('prev-btn').disabled) {
+        prevStep();
+      }
+    });
+  </script>
+</body>
+</html>
