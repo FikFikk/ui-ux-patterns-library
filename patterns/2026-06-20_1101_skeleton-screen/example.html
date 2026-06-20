@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skeleton Screen Pattern - Demo Interaktif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --skeleton-base: #e0e0e0;
+            --skeleton-shimmer: #f0f0f0;
+            --skeleton-highlight: #fafafa;
+            --border-color: #e0e0e0;
+            --accent-color: #2196F3;
+            --success-color: #4CAF50;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #9e9e9e;
+            --skeleton-base: #2a2a2a;
+            --skeleton-shimmer: #3a3a3a;
+            --skeleton-highlight: #404040;
+            --border-color: #404040;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            padding: 20px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+        }
+
+        .theme-toggle {
+            margin-left: auto;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-section {
+            margin-bottom: 40px;
+            background: var(--bg-primary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .demo-section h2 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+        }
+
+        .demo-section p {
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+
+        /* Skeleton Base Styles */
+        .skeleton {
+            background: var(--skeleton-base);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                var(--skeleton-shimmer) 50%,
+                transparent 100%
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Respect prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton::before {
+                animation: none;
+            }
+            .skeleton {
+                opacity: 0.7;
+            }
+        }
+
+        /* Card Layout Demo */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .skeleton-image {
+            width: 100%;
+            height: 200px;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .skeleton-title {
+            height: 24px;
+            width: 80%;
+            margin-bottom: 12px;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .skeleton-text {
+            height: 14px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-text:last-child {
+            width: 60%;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .skeleton-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .skeleton-short {
+            height: 12px;
+            width: 80px;
+        }
+
+        /* List Demo */
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+        }
+
+        .list-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .list-content {
+            flex: 1;
+        }
+
+        .list-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .list-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Profile Demo */
+        .profile {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--border-color);
+        }
+
+        .skeleton-profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .skeleton-profile-name {
+            height: 32px;
+            width: 250px;
+            margin-bottom: 10px;
+        }
+
+        .profile-bio {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .skeleton-profile-bio {
+            height: 14px;
+            margin-bottom: 8px;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .skeleton-stat {
+            width: 60px;
+            height: 40px;
+        }
+
+        /* Article Demo */
+        .article-header {
+            margin-bottom: 20px;
+        }
+
+        .article-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .skeleton-article-title {
+            height: 40px;
+            width: 90%;
+            margin-bottom: 15px;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-secondary);
+        }
+
+        .article-body {
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+
+        .article-paragraph {
+            margin-bottom: 20px;
+        }
+
+        .skeleton-paragraph {
+            height: 16px;
+            margin-bottom: 10px;
+        }
+
+        /* Fade in animation for loaded content */
+        .loaded {
+            animation: fadeIn 0.4s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Status indicator */
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--success-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .theme-toggle {
+                margin-left: 0;
+            }
+
+            .profile {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦴 Skeleton Screen Pattern</h1>
+        <p>Demo interaktif loading placeholder untuk meningkatkan perceived performance</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="loadAllContent()">🔄 Reload Semua Konten</button>
+        <button class="btn btn-secondary" onclick="resetAllContent()">⏪ Reset ke Skeleton</button>
+        <button class="btn theme-toggle" onclick="toggleTheme()">🌓 Toggle Dark Mode</button>
+    </div>
+
+    <div class="container">
+        <!-- Card Grid Demo -->
+        <div class="demo-section">
+            <h2>1. Product Cards (E-commerce)</h2>
+            <p>Skeleton untuk grid produk - pattern paling umum di e-commerce dan marketplace.</p>
+            <div class="card-grid" id="cardGrid">
+                <!-- Skeleton cards will be inserted here -->
+            </div>
+        </div>
+
+        <!-- List Demo -->
+        <div class="demo-section">
+            <h2>2. User List (Social Media Feed)</h2>
+            <p>Skeleton untuk list item dengan avatar - cocok untuk feed, comments, notifications.</p>
+            <div class="list" id="userList">
+                <!-- Skeleton list items will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Profile Demo -->
+        <div class="demo-section">
+            <h2>3. User Profile</h2>
+            <p>Skeleton untuk halaman profile - kombinasi avatar besar, text, dan stats.</p>
+            <div class="profile" id="userProfile">
+                <!-- Skeleton profile will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Article Demo -->
+        <div class="demo-section">
+            <h2>4. Article Content</h2>
+            <p>Skeleton untuk artikel blog - header, meta info, dan paragraf konten.</p>
+            <div id="articleContent">
+                <!-- Skeleton article will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        }
+
+        // Status notification
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('show');
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+
+        // Skeleton Templates
+        function createSkeletonCard() {
+            return `
+                <div class="card" role="status" aria-label="Loading product">
+                    <div class="skeleton skeleton-image"></div>
+                    <div class="card-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="card-meta">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton skeleton-short"></div>
+                        </div>
+                    </div>
+                    <span class="sr-only">Loading product information, please wait...</span>
+                </div>
+            `;
+        }
+
+        function createSkeletonListItem() {
+            return `
+                <div class="list-item" role="status" aria-label="Loading user">
+                    <div class="skeleton skeleton-avatar list-avatar"></div>
+                    <div class="list-content">
+                        <div class="skeleton skeleton-title" style="height: 18px; width: 40%; margin-bottom: 8px;"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                    </div>
+                    <span class="sr-only">Loading user information...</span>
+                </div>
+            `;
+        }
+
+        function createSkeletonProfile() {
+            return `
+                <div role="status" aria-label="Loading profile" style="display: flex; gap: 30px; width: 100%;">
+                    <div class="skeleton skeleton-profile-avatar"></div>
+                    <div class="profile-info" style="flex: 1;">
+                        <div class="skeleton skeleton-profile-name"></div>
+                        <div class="skeleton skeleton-profile-bio"></div>
+                        <div class="skeleton skeleton-profile-bio"></div>
+                        <div class="skeleton skeleton-profile-bio" style="width: 50%;"></div>
+                        <div class="profile-stats">
+                            <div class="skeleton skeleton-stat"></div>
+                            <div class="skeleton skeleton-stat"></div>
+                            <div class="skeleton skeleton-stat"></div>
+                        </div>
+                    </div>
+                    <span class="sr-only">Loading user profile...</span>
+                </div>
+            `;
+        }
+
+        function createSkeletonArticle() {
+            return `
+                <div role="status" aria-label="Loading article">
+                    <div class="article-header">
+                        <div class="skeleton skeleton-article-title"></div>
+                        <div class="article-meta">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton skeleton-short"></div>
+                            <div class="skeleton skeleton-short"></div>
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="skeleton skeleton-paragraph"></div>
+                        <div class="skeleton skeleton-paragraph"></div>
+                        <div class="skeleton skeleton-paragraph"></div>
+                        <div class="skeleton skeleton-paragraph" style="width: 80%;"></div>
+                        <br>
+                        <div class="skeleton skeleton-paragraph"></div>
+                        <div class="skeleton skeleton-paragraph"></div>
+                        <div class="skeleton skeleton-paragraph"></div>
+                        <div class="skeleton skeleton-paragraph" style="width: 65%;"></div>
+                    </div>
+                    <span class="sr-only">Loading article content...</span>
+                </div>
+            `;
+        }
+
+        // Real Content Templates
+        const products = [
+            {
+                image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop',
+                title: 'Headphone Premium',
+                description: 'Headphone wireless dengan noise cancellation dan audio quality terbaik.',
+                author: 'TechStore',
+                price: 'Rp 1.250.000'
+            },
+            {
+                image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop',
+                title: 'Smartwatch Modern',
+                description: 'Smartwatch dengan fitur health monitoring dan battery life 7 hari.',
+                author: 'GadgetHub',
+                price: 'Rp 2.500.000'
+            },
+            {
+                image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=300&fit=crop',
+                title: 'Camera Profesional',
+                description: 'Kamera mirrorless untuk fotografi profesional dengan sensor full-frame.',
+                author: 'PhotoPro',
+                price: 'Rp 18.500.000'
+            }
+        ];
+
+        const users = [
+            {
+                name: 'Sarah Anderson',
+                bio: 'UX Designer yang passionate tentang accessibility dan inclusive design. Currently working on design system.',
+                avatar: '👩‍💻'
+            },
+            {
+                name: 'Michael Chen',
+                bio: 'Frontend Developer. Love React, TypeScript, dan performance optimization. Building the web, one component at a time.',
+                avatar: '👨‍💼'
+            },
+            {
+                name: 'Priya Sharma',
+                bio: 'Product Manager dengan background design. Percaya bahwa good products start with deep user understanding.',
+                avatar: '👩‍🎨'
+            },
+            {
+                name: 'Alex Rodriguez',
+                bio: 'Full-stack developer. Open source enthusiast. Coffee addict ☕. Always learning something new.',
+                avatar: '👨‍🔬'
+            }
+        ];
+
+        function createRealCard(product) {
+            return `
+                <div class="card loaded">
+                    <img src="${product.image}" alt="${product.title}" class="card-image" loading="lazy">
+                    <div class="card-content">
+                        <h3 class="card-title">${product.title}</h3>
+                        <p class="card-description">${product.description}</p>
+                        <div class="card-meta">
+                            <span>🏪</span>
+                            <span>${product.author}</span>
+                            <span>•</span>
+                            <span style="font-weight: 600; color: var(--accent-color);">${product.price}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createRealListItem(user) {
+            return `
+                <div class="list-item loaded">
+                    <div class="list-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        ${user.avatar}
+                    </div>
+                    <div class="list-content">
+                        <div class="list-title">${user.name}</div>
+                        <div class="list-description">${user.bio}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createRealProfile() {
+            return `
+                <div style="display: flex; gap: 30px; width: 100%;" class="loaded">
+                    <div class="profile-avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; font-size: 48px;">
+                        👨‍💻
+                    </div>
+                    <div class="profile-info">
+                        <h2 class="profile-name">Ahmad Pratama</h2>
+                        <p class="profile-bio">
+                            Senior Product Designer yang passionate tentang creating delightful user experiences.
+                            Specialized in design systems, interaction design, dan UX research. 
+                            Love to share knowledge melalui writing dan mentoring.
+                        </p>
+                        <div class="profile-stats">
+                            <div class="stat">
+                                <div class="stat-value">1.2K</div>
+                                <div class="stat-label">Followers</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">342</div>
+                                <div class="stat-label">Following</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">89</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createRealArticle() {
+            return `
+                <div class="loaded">
+                    <div class="article-header">
+                        <h2 class="article-title">Memahami Skeleton Screen dalam UX Design</h2>
+                        <div class="article-meta">
+                            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✍️</span>
+                            <span>Rina Wijaya</span>
+                            <span>•</span>
+                            <span>5 min read</span>
+                            <span>•</span>
+                            <span>20 Jun 2026</span>
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <p class="article-paragraph">
+                            Skeleton screen adalah pattern UI yang semakin populer di kalangan designer dan developer.
+                            Alih-alih menampilkan spinner atau loading indicator generik, skeleton screen memberikan
+                            preview visual dari struktur konten yang akan muncul.
+                        </p>
+                        <p class="article-paragraph">
+                            Research menunjukkan bahwa skeleton screen dapat meningkatkan perceived performance hingga 30%.
+                            Users merasa aplikasi lebih responsif karena mereka mendapat feedback visual yang jelas tentang
+                            apa yang sedang loading dan apa yang akan muncul.
+                        </p>
+                        <p class="article-paragraph">
+                            Implementasi skeleton screen yang baik harus match dengan struktur konten final. Gunakan
+                            warna yang subtle, animasi yang smooth (shimmer atau pulse), dan pastikan accessible untuk
+                            semua users termasuk yang menggunakan screen reader.
+                        </p>
+                        <p class="article-paragraph">
+                            Best practice: gunakan skeleton screen untuk loading yang membutuhkan waktu 1-10 detik.
+                            Untuk loading yang lebih cepat dari 300ms, lebih baik langsung tampilkan konten tanpa skeleton
+                            untuk menghindari flicker effect yang mengganggu user experience.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize with skeletons
+        function initializeSkeletons() {
+            // Card grid
+            const cardGrid = document.getElementById('cardGrid');
+            cardGrid.innerHTML = createSkeletonCard() + createSkeletonCard() + createSkeletonCard();
+
+            // User list
+            const userList = document.getElementById('userList');
+            userList.innerHTML = createSkeletonListItem() + createSkeletonListItem() + 
+                               createSkeletonListItem() + createSkeletonListItem();
+
+            // Profile
+            const userProfile = document.getElementById('userProfile');
+            userProfile.innerHTML = createSkeletonProfile();
+
+            // Article
+            const articleContent = document.getElementById('articleContent');
+            articleContent.innerHTML = createSkeletonArticle();
+        }
+
+        // Load real content with delay
+        function loadContent(elementId, createFunction, delay = 2000) {
+            setTimeout(() => {
+                const element = document.getElementById(elementId);
+                element.innerHTML = createFunction();
+            }, delay);
+        }
+
+        function loadAllContent() {
+            showStatus('🔄 Loading konten...');
+            initializeSkeletons();
+
+            // Load cards (staggered)
+            setTimeout(() => {
+                document.getElementById('cardGrid').innerHTML = 
+                    createRealCard(products[0]) + createSkeletonCard() + createSkeletonCard();
+            }, 1500);
+
+            setTimeout(() => {
+                document.getElementById('cardGrid').innerHTML = 
+                    createRealCard(products[0]) + createRealCard(products[1]) + createSkeletonCard();
+            }, 2500);
+
+            setTimeout(() => {
+                document.getElementById('cardGrid').innerHTML = 
+                    createRealCard(products[0]) + createRealCard(products[1]) + createRealCard(products[2]);
+            }, 3500);
+
+            // Load user list
+            setTimeout(() => {
+                document.getElementById('userList').innerHTML = users.map(createRealListItem).join('');
+            }, 2000);
+
+            // Load profile
+            setTimeout(() => {
+                document.getElementById('userProfile').innerHTML = createRealProfile();
+            }, 2200);
+
+            // Load article
+            setTimeout(() => {
+                document.getElementById('articleContent').innerHTML = createRealArticle();
+                showStatus('✅ Semua konten berhasil dimuat!');
+            }, 2400);
+        }
+
+        function resetAllContent() {
+            showStatus('⏪ Reset ke skeleton state...');
+            initializeSkeletons();
+        }
+
+        // Initialize on page load
+        initializeSkeletons();
+        
+        // Auto-load after 1 second for demo
+        setTimeout(() => {
+            loadAllContent();
+        }, 1000);
+    </script>
+</body>
+</html>
