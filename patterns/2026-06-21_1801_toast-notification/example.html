@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toast Notification Pattern - Demo Interaktif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .demo-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .demo-section {
+            margin-bottom: 30px;
+        }
+
+        .demo-section h2 {
+            color: #4a5568;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .demo-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .demo-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-error {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-undo {
+            background: #805ad5;
+            color: white;
+        }
+
+        .btn-progress {
+            background: #38b2ac;
+            color: white;
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Toast Base Styles */
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            margin-bottom: 12px;
+            min-width: 300px;
+            max-width: 500px;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateX(-100%);
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.hiding {
+            animation: slideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 16px;
+        }
+
+        .toast-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toast-message {
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .toast-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .toast-action-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toast-close {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: #a0aec0;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .toast-close:hover {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        /* Toast Types */
+        .toast.success .toast-icon {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .toast.success {
+            border-left: 4px solid #48bb78;
+        }
+
+        .toast.error .toast-icon {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .toast.error {
+            border-left: 4px solid #f56565;
+        }
+
+        .toast.warning .toast-icon {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #ed8936;
+        }
+
+        .toast.info .toast-icon {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .toast.info {
+            border-left: 4px solid #4299e1;
+        }
+
+        /* Progress Bar */
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 0 8px;
+            transition: width linear;
+        }
+
+        .toast.success .toast-progress {
+            background: #48bb78;
+        }
+
+        .toast.error .toast-progress {
+            background: #f56565;
+        }
+
+        .toast.warning .toast-progress {
+            background: #ed8936;
+        }
+
+        .toast.info .toast-progress {
+            background: #4299e1;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .settings-panel h3 {
+            color: #4a5568;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .setting-label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        select {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .value-display {
+            color: #4a5568;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .toast-container {
+                left: 10px;
+                right: 10px;
+            }
+
+            .toast {
+                min-width: auto;
+                max-width: 100%;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Reduce Motion */
+        @media (prefers-reduced-motion: reduce) {
+            .toast {
+                animation: fadeIn 0.3s ease-in forwards;
+            }
+
+            .toast.hiding {
+                animation: fadeOut 0.2s ease-out forwards;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🍞 Toast Notification Pattern</h1>
+        <p class="subtitle">Demo interaktif untuk pattern feedback non-intrusive</p>
+
+        <div class="demo-section">
+            <h2>🎨 Tipe-Tipe Toast</h2>
+            <div class="demo-grid">
+                <button class="demo-btn btn-success" onclick="showToast('success', 'Perubahan berhasil disimpan!')">
+                    ✓ Success Toast
+                </button>
+                <button class="demo-btn btn-error" onclick="showToast('error', 'Gagal mengirim data. Coba lagi.')">
+                    ✕ Error Toast
+                </button>
+                <button class="demo-btn btn-warning" onclick="showToast('warning', 'Koneksi tidak stabil, periksa jaringan Anda.')">
+                    ⚠ Warning Toast
+                </button>
+                <button class="demo-btn btn-info" onclick="showToast('info', 'Sistem akan maintenance dalam 10 menit.')">
+                    ℹ Info Toast
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>⚡ Toast dengan Action</h2>
+            <div class="demo-grid">
+                <button class="demo-btn btn-undo" onclick="showUndoToast()">
+                    ↩ Undo Action
+                </button>
+                <button class="demo-btn btn-progress" onclick="showProgressToast()">
+                    ⏳ Progress Toast
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📚 Multiple Toasts</h2>
+            <div class="demo-grid">
+                <button class="demo-btn btn-info" onclick="showMultipleToasts()">
+                    📤 Stacking Demo
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <h3>⚙️ Pengaturan Toast</h3>
+            <div class="setting-row">
+                <span class="setting-label">Durasi (detik)</span>
+                <div class="setting-control">
+                    <input type="range" id="duration" min="2" max="10" value="4" step="1">
+                    <span class="value-display" id="durationValue">4s</span>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Posisi</span>
+                <select id="position">
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="top-right">Top Right</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Progress Bar</span>
+                <input type="checkbox" id="showProgress" checked>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+    <script>
+        // Configuration
+        let config = {
+            duration: 4000,
+            position: 'bottom-left',
+            showProgress: true
+        };
+
+        // Update config from UI
+        document.getElementById('duration').addEventListener('input', (e) => {
+            config.duration = parseInt(e.target.value) * 1000;
+            document.getElementById('durationValue').textContent = e.target.value + 's';
+        });
+
+        document.getElementById('position').addEventListener('change', (e) => {
+            config.position = e.target.value;
+            updateContainerPosition();
+        });
+
+        document.getElementById('showProgress').addEventListener('change', (e) => {
+            config.showProgress = e.target.checked;
+        });
+
+        // Update toast container position
+        function updateContainerPosition() {
+            const container = document.getElementById('toastContainer');
+            container.style.cssText = '';
+            
+            const [vertical, horizontal] = config.position.split('-');
+            container.style.position = 'fixed';
+            container.style.zIndex = '9999';
+            container.style[vertical] = '20px';
+            container.style[horizontal] = '20px';
+        }
+
+        // Main toast function
+        function showToast(type, message, options = {}) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            
+            // Icon map
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            // Build toast HTML
+            let html = `
+                <div class="toast-icon">${icons[type]}</div>
+                <div class="toast-content">
+                    <div class="toast-message">${message}</div>
+                    ${options.actions ? `<div class="toast-actions">${options.actions}</div>` : ''}
+                </div>
+                <button class="toast-close" aria-label="Close notification">✕</button>
+            `;
+
+            if (config.showProgress) {
+                html += `<div class="toast-progress" style="width: 100%"></div>`;
+            }
+
+            toast.innerHTML = html;
+            container.appendChild(toast);
+
+            // Close button handler
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                removeToast(toast);
+            });
+
+            // Auto-remove with progress
+            const duration = options.duration || config.duration;
+            let startTime = Date.now();
+            
+            if (config.showProgress) {
+                const progressBar = toast.querySelector('.toast-progress');
+                const updateProgress = () => {
+                    const elapsed = Date.now() - startTime;
+                    const remaining = Math.max(0, 100 - (elapsed / duration * 100));
+                    progressBar.style.width = remaining + '%';
+                    
+                    if (remaining > 0) {
+                        requestAnimationFrame(updateProgress);
+                    }
+                };
+                requestAnimationFrame(updateProgress);
+            }
+
+            const timer = setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+
+            // Store timer for cleanup
+            toast._timer = timer;
+
+            return toast;
+        }
+
+        function removeToast(toast) {
+            clearTimeout(toast._timer);
+            toast.classList.add('hiding');
+            setTimeout(() => {
+                toast.remove();
+            }, 200);
+        }
+
+        // Specific toast examples
+        function showUndoToast() {
+            const actions = `
+                <button class="toast-action-btn" style="background: #805ad5; color: white;" onclick="handleUndo(this)">
+                    Undo
+                </button>
+            `;
+            showToast('success', 'Email berhasil dihapus', { 
+                actions,
+                duration: 6000 
+            });
+        }
+
+        function handleUndo(btn) {
+            const toast = btn.closest('.toast');
+            removeToast(toast);
+            showToast('info', 'Aksi dibatalkan');
+        }
+
+        function showProgressToast() {
+            const toast = showToast('info', 'Mengupload file...', { 
+                duration: 5000 
+            });
+            
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    removeToast(toast);
+                    showToast('success', 'Upload selesai! File tersimpan.');
+                }
+            }, 1000);
+        }
+
+        function showMultipleToasts() {
+            showToast('info', 'Memulai proses...');
+            setTimeout(() => showToast('success', 'Langkah 1 selesai'), 500);
+            setTimeout(() => showToast('success', 'Langkah 2 selesai'), 1000);
+            setTimeout(() => showToast('success', 'Semua proses selesai!'), 1500);
+        }
+
+        // Initialize
+        updateContainerPosition();
+    </script>
+</body>
+</html>
