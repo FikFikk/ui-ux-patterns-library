@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Multi-Step Form - UI/UX Design System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #e0e7ff;
+            --success: #10b981;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --error-color: #ef4444;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Progress Stepper styling */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            padding: 32px 40px 24px;
+            position: relative;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            right: 60px;
+            height: 4px;
+            background-color: var(--border-color);
+            transform: translateY(-8px);
+            z-index: 1;
+        }
+
+        .stepper-progress {
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            height: 4px;
+            background-color: var(--primary);
+            transform: translateY(-8px);
+            z-index: 2;
+            width: 0%;
+            transition: var(--transition);
+        }
+
+        .step-item {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            outline: none;
+            width: 40px;
+        }
+
+        .step-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            border: 2px solid var(--border-color);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .step-label {
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap;
+            transition: var(--transition);
+            position: absolute;
+            top: 36px;
+        }
+
+        /* Active State */
+        .step-item.active .step-badge {
+            border-color: var(--primary);
+            background-color: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .step-item.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Completed State */
+        .step-item.completed .step-badge {
+            border-color: var(--success);
+            background-color: var(--success);
+            color: #ffffff;
+        }
+
+        .step-item.completed .step-label {
+            color: var(--success);
+        }
+
+        /* Form Area styling */
+        .form-content {
+            padding: 32px 40px;
+        }
+
+        .step-panel {
+            display: none;
+        }
+
+        .step-panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            outline: none; /* Focus indicator removed, handled programmatically but styling can mark it */
+        }
+
+        .step-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        /* Input Controls classes */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-input.is-invalid {
+            border-color: var(--error-color);
+        }
+
+        .form-input.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        /* Navigation Buttons Row */
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-prev {
+            background-color: #ffffff;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-prev:hover {
+            background-color: var(--bg-light);
+            border-color: #d1d5db;
+        }
+
+        .btn-next {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: 1px solid transparent;
+            margin-left: auto;
+        }
+
+        .btn-next:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-next:focus, .btn-prev:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Review step style */
+        .review-panel {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .review-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .review-row:last-child {
+            border-bottom: none;
+        }
+
+        .review-key {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .review-val {
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        /* Success panel */
+        .success-panel {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background-color: #ecfdf5;
+            color: var(--success);
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            margin-bottom: 24px;
+        }
+
+        /* Mobile styling adjustment (Responsive) */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .stepper {
+                padding: 24px 20px 24px;
+            }
+            .step-label {
+                display: none;
+            }
+            .stepper::before, .stepper-progress {
+                left: 30px;
+                right: 30px;
+            }
+            .step-item {
+                width: 32px;
+            }
+            .form-content {
+                padding: 24px 20px;
+            }
+            .step-title {
+                font-size: 18px;
+            }
+        }
+
+        /* System motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-delay: 0s !important;
+                animation-duration: 0s !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0s !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" role="main">
+        <!-- Interactive Stepper -->
+        <nav aria-label="Progress formulir" class="stepper">
+            <span class="sr-only">Posisi pengisian formulir</span>
+            <div class="stepper-progress" id="stepper-progress" aria-hidden="true"></div>
+            
+            <button class="step-item active" id="step-btn-1" aria-current="step" disabled>
+                <span class="step-badge">1</span>
+                <span class="step-label">Akun</span>
+            </button>
+            <button class="step-item" id="step-btn-2" disabled>
+                <span class="step-badge">2</span>
+                <span class="step-label">Profil</span>
+            </button>
+            <button class="step-item" id="step-btn-3" disabled>
+                <span class="step-badge">3</span>
+                <span class="step-label">Review</span>
+            </button>
+        </nav>
+
+        <!-- Live region for accessibility updates -->
+        <div id="live-region" class="sr-only" role="status" aria-live="polite"></div>
+
+        <form id="multi-step-form" class="form-content" novalidate>
+            
+            <!-- STEP 1: Akun -->
+            <section class="step-panel active" id="panel-1" aria-labelledby="title-1">
+                <h2 class="step-title" id="title-1" tabindex="-1">Informasi Akun</h2>
+                <p class="step-desc">Masukkan detail akun dasar Anda untuk memulai.</p>
+                
+                <div class="form-group">
+                    <label class="form-label" for="username">Username *</label>
+                    <input class="form-input" type="text" id="username" name="username" required aria-required="true" placeholder="Masukkan username unik anda">
+                    <span class="error-message" id="username-error">Username wajib diisi (minimal 4 karakter).</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Alamat Email *</label>
+                    <input class="form-input" type="email" id="email" name="email" required aria-required="true" placeholder="misal: nama@domain.com">
+                    <span class="error-message" id="email-error">Masukkan alamat email yang valid.</span>
+                </div>
+            </section>
+
+            <!-- STEP 2: Detail Profil -->
+            <section class="step-panel" id="panel-2" aria-labelledby="title-2">
+                <h2 class="step-title" id="title-2" tabindex="-1">Detail Profil</h2>
+                <p class="step-desc">Lengkapi biodata profil publik Anda.</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="fullname">Nama Lengkap *</label>
+                    <input class="form-input" type="text" id="fullname" name="fullname" required aria-required="true" placeholder="Masukkan nama resmi Anda">
+                    <span class="error-message" id="fullname-error">Nama lengkap wajib diisi.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="bio">Biografi Singkat (Opsional)</label>
+                    <textarea class="form-input" id="bio" name="bio" rows="3" placeholder="Ceritakan sedikit mengenai diri Anda..."></textarea>
+                </div>
+            </section>
+
+            <!-- STEP 3: Review Data -->
+            <section class="step-panel" id="panel-3" aria-labelledby="title-3">
+                <h2 class="step-title" id="title-3" tabindex="-1">Tinjau Akun Anda</h2>
+                <p class="step-desc">Harap periksa kembali semua informasi sebelum mengirim data.</p>
+
+                <div class="review-panel" aria-label="Ringkasan Formulir">
+                    <div class="review-row">
+                        <span class="review-key">Username</span>
+                        <span class="review-val" id="review-username">—</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Email</span>
+                        <span class="review-val" id="review-email">—</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Nama Lengkap</span>
+                        <span class="review-val" id="review-fullname">—</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Biografi</span>
+                        <span class="review-val" id="review-bio">—</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUCCESS PANEL (Hidden by default, shown after submit) -->
+            <section class="step-panel" id="panel-success" aria-labelledby="title-success">
+                <div class="success-panel">
+                    <div class="success-icon" aria-hidden="true">✓</div>
+                    <h2 class="step-title" id="title-success" tabindex="-1">Pendaftaran Berhasil!</h2>
+                    <p class="step-desc">Akun Anda telah disiapkan. Silakan periksa email masuk Anda untuk instruksi verifikasi selanjutnya.</p>
+                </div>
+            </section>
+
+            <!-- Navigation Bar Buttons -->
+            <div class="form-navigation" id="nav-container">
+                <button type="button" class="btn btn-prev" id="btn-prev" style="visibility: hidden;">
+                    ← Kembali
+                </button>
+                <button type="button" class="btn btn-next" id="btn-next">
+                    Selanjutnya →
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- JavaScript logic and state management -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('multi-step-form');
+            const stepBtn1 = document.getElementById('step-btn-1');
+            const stepBtn2 = document.getElementById('step-btn-2');
+            const stepBtn3 = document.getElementById('step-btn-3');
+            
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const liveRegion = document.getElementById('live-region');
+            const stepperProgress = document.getElementById('stepper-progress');
+            const navContainer = document.getElementById('nav-container');
+
+            let currentStep = 1;
+            const totalSteps = 3;
+
+            // Update UI components depending on active step
+            function updateUI() {
+                // Toggle active and completed class on step items
+                const stepItems = [stepBtn1, stepBtn2, stepBtn3];
+                stepItems.forEach((btn, index) => {
+                    const stepNum = index + 1;
+                    btn.classList.remove('active', 'completed');
+                    btn.removeAttribute('aria-current');
+
+                    if (stepNum === currentStep) {
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-current', 'step');
+                    } else if (stepNum < currentStep) {
+                        btn.classList.add('completed');
+                    }
+                });
+
+                // Update Progress bar percentage
+                const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+                stepperProgress.style.width = `${progressPercent}%`;
+
+                // Display active step panel, hide others
+                for (let i = 1; i <= totalSteps; i++) {
+                    const panel = document.getElementById(`panel-${i}`);
+                    if (i === currentStep) {
+                        panel.classList.add('active');
+                        // Programmatic Focus Management for Screen Readers
+                        const panelTitle = document.getElementById(`title-${i}`);
+                        panelTitle.focus();
+                    } else {
+                        panel.classList.remove('active');
+                    }
+                }
+
+                // Adjust Navigation Buttons state
+                if (currentStep === 1) {
+                    btnPrev.style.visibility = 'hidden';
+                    btnNext.textContent = 'Selanjutnya →';
+                } else if (currentStep === totalSteps) {
+                    btnPrev.style.visibility = 'visible';
+                    btnNext.textContent = 'Kirim Data ✓';
+                    btnNext.style.backgroundColor = 'var(--success)';
+                } else {
+                    btnPrev.style.visibility = 'visible';
+                    btnNext.textContent = 'Selanjutnya →';
+                    btnNext.style.backgroundColor = 'var(--primary)';
+                }
+
+                // Update Screen Reader polite announcement
+                liveRegion.textContent = `Langkah ${currentStep} dari ${totalSteps}.`;
+            }
+
+            // Client side validation per step
+            function validateStep(step) {
+                let isValid = true;
+
+                if (step === 1) {
+                    const username = document.getElementById('username');
+                    const email = document.getElementById('email');
+                    
+                    // Username validation
+                    if (username.value.trim().length < 4) {
+                        showError(username, 'username-error');
+                        isValid = false;
+                    } else {
+                        hideError(username, 'username-error');
+                    }
+
+                    // Email validation (simple regex)
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email.value.trim())) {
+                        showError(email, 'email-error');
+                        isValid = false;
+                    } else {
+                        hideError(email, 'email-error');
+                    }
+                } 
+                else if (step === 2) {
+                    const fullname = document.getElementById('fullname');
+
+                    // Full name validation
+                    if (fullname.value.trim().length === 0) {
+                        showError(fullname, 'fullname-error');
+                        isValid = false;
+                    } else {
+                        hideError(fullname, 'fullname-error');
+                    }
+                }
+
+                return isValid;
+            }
+
+            function showError(input, errorId) {
+                input.classList.add('is-invalid');
+                input.setAttribute('aria-invalid', 'true');
+                input.setAttribute('aria-describedby', errorId);
+                document.getElementById(errorId).style.display = 'block';
+            }
+
+            function hideError(input, errorId) {
+                input.classList.remove('is-invalid');
+                input.removeAttribute('aria-invalid');
+                input.removeAttribute('aria-describedby');
+                document.getElementById(errorId).style.display = 'none';
+            }
+
+            // Fill the details for summary review screen (Step 3)
+            function populateReviewData() {
+                document.getElementById('review-username').textContent = document.getElementById('username').value.trim();
+                document.getElementById('review-email').textContent = document.getElementById('email').value.trim();
+                document.getElementById('review-fullname').textContent = document.getElementById('fullname').value.trim();
+                
+                const bioVal = document.getElementById('bio').value.trim();
+                document.getElementById('review-bio').textContent = bioVal ? bioVal : '— (Tidak ada biografi)';
+            }
+
+            // Action: Click on Next / Submit button
+            btnNext.addEventListener('click', () => {
+                if (currentStep < totalSteps) {
+                    if (validateStep(currentStep)) {
+                        currentStep++;
+                        if (currentStep === totalSteps) {
+                            populateReviewData();
+                        }
+                        updateUI();
+                    }
+                } else {
+                    // Step Final: Submit form simulated
+                    if (validateStep(currentStep)) {
+                        // Hide stepper and navigation buttons
+                        document.querySelector('.stepper').style.display = 'none';
+                        navContainer.style.display = 'none';
+                        
+                        // Hide the last step panel
+                        document.getElementById(`panel-${totalSteps}`).classList.remove('active');
+
+                        // Show Success Panel
+                        const successPanel = document.getElementById('panel-success');
+                        successPanel.classList.add('active');
+                        
+                        // Focus on top header of success block
+                        setTimeout(() => {
+                            document.getElementById('title-success').focus();
+                        }, 50);
+
+                        liveRegion.textContent = 'Pendaftaran berhasil dikirim. Terima kasih.';
+                    }
+                }
+            });
+
+            // Action: Click on Prev / Kembali button
+            btnPrev.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateUI();
+                }
+            });
+
+            // Handle real-time input error removal once corrected
+            const inputs = form.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('is-invalid')) {
+                        // Clear error styling context when user starts correction typing
+                        const errorId = input.id + '-error';
+                        const errorElem = document.getElementById(errorId);
+                        if (errorElem) {
+                            hideError(input, errorId);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
