@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Infinite Scroll + Lazy Loading — Demo</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-bg:         #0f1117;
+      --color-surface:    #1a1d2e;
+      --color-surface-2:  #252840;
+      --color-primary:    #6c63ff;
+      --color-primary-h:  #8b85ff;
+      --color-accent:     #ff6584;
+      --color-text:       #e2e8f0;
+      --color-text-muted: #94a3b8;
+      --color-border:     #2d3148;
+      --color-success:    #2dd4bf;
+      --color-warning:    #fbbf24;
+      --radius-sm:        6px;
+      --radius-md:        12px;
+      --radius-lg:        20px;
+      --shadow-card:      0 4px 24px rgba(0,0,0,.4);
+      --transition:       0.25s ease;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ─── Screen-reader only ────────────────────────────── */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ─── Header ─────────────────────────────────────────── */
+    .site-header {
+      background: rgba(15,17,23,.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 24px;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-text);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+    }
+
+    .stat-badge {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 99px;
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-badge span { color: var(--color-success); font-weight: 600; }
+
+    /* ─── Main Layout ────────────────────────────────────── */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ─── Page Title ─────────────────────────────────────── */
+    .page-title {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .page-title h1 {
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .page-title p {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ─── Controls Bar ───────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 16px 20px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+    }
+
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+    }
+
+    .item-count {
+      color: var(--color-text);
+      font-weight: 600;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      transition: all var(--transition);
+    }
+
+    .pill:hover, .pill.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+    }
+
+    .pill:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* ─── Grid ───────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* ─── Card ───────────────────────────────────────────── */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+      animation: fadeSlideIn 0.4s ease both;
+      cursor: pointer;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card { animation: none; }
+      .card-img img { transition: none; }
+      .skeleton-wave::after { animation: none; }
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card), 0 0 0 1px var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    .card:focus-within {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* ─── Card Image (Lazy Loading demo) ─────────────────── */
+    .card-img {
+      position: relative;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: var(--color-surface-2);
+    }
+
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.5s ease, transform 0.4s ease;
+      opacity: 0;
+    }
+
+    .card-img img.loaded {
+      opacity: 1;
+    }
+
+    .card:hover .card-img img.loaded {
+      transform: scale(1.05);
+    }
+
+    /* Placeholder shimmer sebelum gambar load */
+    .img-placeholder {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        var(--color-surface-2) 25%,
+        var(--color-surface) 50%,
+        var(--color-surface-2) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      transition: opacity 0.3s ease;
+    }
+
+    .img-placeholder.hidden { opacity: 0; pointer-events: none; }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Category badge */
+    .card-img .badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* Like button */
+    .card-img .btn-like {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 34px; height: 34px;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      border: none;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: all var(--transition);
+      color: #fff;
+    }
+
+    .btn-like:hover, .btn-like.liked { background: var(--color-accent); }
+    .btn-like:focus-visible { outline: 2px solid var(--color-primary); }
+
+    /* ─── Card Body ──────────────────────────────────────── */
+    .card-body { padding: 16px; }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      line-height: 1.4;
+      color: var(--color-text);
+    }
+
+    .card-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .card-title a:hover { color: var(--color-primary-h); }
+    .card-title a:focus-visible { outline: 2px solid var(--color-primary); border-radius: 2px; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+      margin-top: 10px;
+    }
+
+    .avatar {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .meta-dot { color: var(--color-border); }
+
+    /* ─── Sentinel (trigger element) ─────────────────────── */
+    #sentinel {
+      height: 1px;
+      margin-top: 8px;
+    }
+
+    /* ─── Loading Indicator ──────────────────────────────── */
+    #loading-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 32px;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+    }
+
+    #loading-indicator.hidden { display: none; }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ─── Load More button (hybrid fallback) ─────────────── */
+    #load-more-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 340px;
+      margin: 8px auto 0;
+      padding: 13px 24px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    #load-more-btn:hover {
+      background: var(--color-surface-2);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    #load-more-btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    #load-more-btn.hidden { display: none; }
+
+    /* ─── Error state ────────────────────────────────────── */
+    #error-box {
+      background: rgba(255,101,132,.1);
+      border: 1px solid rgba(255,101,132,.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    #error-box.visible { display: block; }
+    #error-box p { color: var(--color-accent); margin-bottom: 12px; }
+    #retry-btn {
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    /* ─── End of Content ─────────────────────────────────── */
+    #end-message {
+      text-align: center;
+      padding: 32px;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #end-message.visible { display: flex; }
+    #end-message .end-icon { font-size: 2rem; }
+    #end-message strong { color: var(--color-text); font-size: 1rem; }
+
+    /* ─── Back to Top ────────────────────────────────────── */
+    #back-to-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 48px; height: 48px;
+      background: var(--color-primary);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 20px rgba(108,99,255,.5);
+      transition: all var(--transition);
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+    }
+
+    #back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    #back-to-top:hover { background: var(--color-primary-h); transform: translateY(-2px); }
+    #back-to-top:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+    /* ─── Debug Panel (info teknis) ──────────────────────── */
+    .debug-panel {
+      position: fixed;
+      bottom: 88px;
+      right: 28px;
+      background: rgba(15,17,23,.95);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      color: var(--color-text-muted);
+      min-width: 180px;
+      line-height: 1.8;
+    }
+
+    .debug-panel .debug-title {
+      color: var(--color-primary);
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+    }
+
+    .debug-val { color: var(--color-success); }
+
+    /* ─── Notification Toast ─────────────────────────────── */
+    #toast {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-success);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 0.825rem;
+      color: var(--color-text);
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      max-width: 260px;
+      z-index: 200;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ─── Skeleton Cards ─────────────────────────────────── */
+    .skeleton-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .skeleton-img {
+      aspect-ratio: 16/9;
+      background: var(--color-surface-2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton-body { padding: 16px; }
+
+    .skeleton-line {
+      height: 12px;
+      background: var(--color-surface-2);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skeleton-line:last-child { width: 60%; }
+
+    .skeleton-wave::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.04) 50%, transparent 100%);
+      animation: wave 1.5s infinite;
+    }
+
+    @keyframes wave {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .main { padding: 20px 16px 60px; }
+      .header-stats { display: none; }
+      .controls-bar { flex-direction: column; align-items: flex-start; }
+      .debug-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════ HEADER -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="#main-content" class="logo">
+        <div class="logo-icon" aria-hidden="true">∞</div>
+        InfiniteGallery
+      </a>
+      <div class="header-stats" aria-hidden="true">
+        <div class="stat-badge">Dimuat: <span id="header-count">0</span></div>
+        <div class="stat-badge">Halaman: <span id="header-page">0</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════ ARIA LIVE REGION (Wajib untuk a11y!) -->
+  <div
+    id="live-region"
+    role="status"
+    aria-live="polite"
+    aria-atomic="false"
+    class="sr-only"
+  ></div>
+
+  <!-- Skip link -->
+  <a href="#card-grid" class="sr-only" style="position:absolute;top:4px;left:4px;padding:8px;background:var(--color-primary);color:#fff;border-radius:4px;z-index:999;">
+    Lompat ke konten utama
+  </a>
+
+  <!-- ══════════════════════════════════ MAIN -->
+  <main class="main" id="main-content">
+
+    <div class="page-title">
+      <h1>Infinite Scroll + Lazy Loading</h1>
+      <p>Demo aksesibel: konten dimuat otomatis saat scroll, gambar di-lazy load dengan IntersectionObserver</p>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-bar" role="toolbar" aria-label="Filter konten">
+      <div class="controls-left">
+        <span id="item-count-label" class="item-count">0</span>
+        <span>item ditampilkan</span>
+      </div>
+      <div class="filter-pills" role="group" aria-label="Kategori">
+        <button class="pill active" data-cat="all" aria-pressed="true">Semua</button>
+        <button class="pill" data-cat="desain" aria-pressed="false">Desain</button>
+        <button class="pill" data-cat="teknologi" aria-pressed="false">Teknologi</button>
+        <button class="pill" data-cat="fotografi" aria-pressed="false">Fotografi</button>
+        <button class="pill" data-cat="seni" aria-pressed="false">Seni</button>
+      </div>
+    </div>
+
+    <!-- Card Grid (feed) -->
+    <section
+      id="card-grid"
+      class="card-grid"
+      aria-label="Galeri konten"
+      aria-live="off"
+    >
+      <!-- Kartu diisi oleh JS -->
+    </section>
+
+    <!-- Sentinel — IntersectionObserver mendeteksi ini -->
+    <div id="sentinel" aria-hidden="true"></div>
+
+    <!-- Loading indicator -->
+    <div
+      id="loading-indicator"
+      class="hidden"
+      role="status"
+      aria-label="Memuat konten baru..."
+    >
+      <div class="spinner" aria-hidden="true"></div>
+      <span>Memuat lebih banyak...</span>
+    </div>
+
+    <!-- Error box -->
+    <div id="error-box" role="alert" aria-live="assertive">
+      <p>⚠️ Gagal memuat konten. Periksa koneksi internet Anda.</p>
+      <button id="retry-btn">Coba Lagi</button>
+    </div>
+
+    <!-- Load More button (hybrid fallback untuk keyboard users) -->
+    <button
+      id="load-more-btn"
+      aria-label="Muat konten lebih banyak"
+    >
+      <span aria-hidden="true">↓</span>
+      <span id="load-more-text">Muat Lebih Banyak</span>
+    </button>
+
+    <!-- End of content message -->
+    <div
+      id="end-message"
+      role="status"
+      aria-live="assertive"
+    >
+      <div class="end-icon" aria-hidden="true">🎉</div>
+      <strong>Semua konten telah ditampilkan!</strong>
+      <span id="end-total-text">Total 0 item.</span>
+    </div>
+
+  </main>
+
+  <!-- Back to top -->
+  <button
+    id="back-to-top"
+    aria-label="Kembali ke atas halaman"
+    title="Kembali ke atas"
+  >↑</button>
+
+  <!-- Debug panel -->
+  <div class="debug-panel" aria-hidden="true">
+    <div class="debug-title">⚙ Debug Info</div>
+    <div>Halaman: <span class="debug-val" id="dbg-page">0</span></div>
+    <div>Item: <span class="debug-val" id="dbg-items">0</span></div>
+    <div>Request: <span class="debug-val" id="dbg-req">0</span></div>
+    <div>Status: <span class="debug-val" id="dbg-status">idle</span></div>
+    <div>IO entries: <span class="debug-val" id="dbg-io">0</span></div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ══════════════════════════════════ SCRIPT -->
+  <script>
+    'use strict';
+
+    // ─── Data Generator (simulasi API) ───────────────────
+    const CATEGORIES = ['desain', 'teknologi', 'fotografi', 'seni'];
+    const CATEGORY_COLORS = {
+      desain:     '#6c63ff',
+      teknologi:  '#2dd4bf',
+      fotografi:  '#fbbf24',
+      seni:       '#ff6584',
+    };
+
+    const TITLES = [
+      'Prinsip Gestalt dalam UI Modern',
+      'Arsitektur Micro-Frontend 2025',
+      'Fotografi Street di Kota Hujan',
+      'Seni Generatif dengan Algoritma',
+      'Design System Skala Besar',
+      'WebAssembly untuk Performa Web',
+      'Golden Hour Photography Tips',
+      'Kolase Digital & Mixed Media',
+      'Color Theory untuk UI/UX',
+      'Rust vs Go: Pilihan Bahasa Backend',
+      'Landscape Photography: Blue Hour',
+      'Ilustrasi Vektor Isometrik',
+      'Tipografi Ekspresif 2025',
+      'Edge Computing & CDN Modern',
+      'Fotografi Makro: Dunia Mikro',
+      'Seni Piksel & Nostalgia Digital',
+      'Motion Design Principles',
+      'GraphQL vs REST: Studi Kasus',
+      'Fotografi Astro: Milky Way',
+      'Paper Art & Origami Digital',
+      'Accessibility-First Design',
+      'Serverless Architecture Deep Dive',
+      'Underwater Photography Guide',
+      'Generative Art with p5.js',
+      'Atomic Design Methodology',
+    ];
+
+    const AUTHORS = [
+      { name: 'Aditya K.', init: 'AK' },
+      { name: 'Sari M.',   init: 'SM' },
+      { name: 'Budi H.',   init: 'BH' },
+      { name: 'Rina P.',   init: 'RP' },
+      { name: 'Dimas W.',  init: 'DW' },
+      { name: 'Layla N.',  init: 'LN' },
+    ];
+
+    let itemSeed = 0;
+
+    function generateItem() {
+      itemSeed++;
+      const cat      = CATEGORIES[itemSeed % CATEGORIES.length];
+      const title    = TITLES[itemSeed % TITLES.length];
+      const author   = AUTHORS[itemSeed % AUTHORS.length];
+      const daysAgo  = Math.floor(Math.random() * 30) + 1;
+      const likes    = Math.floor(Math.random() * 980) + 20;
+      // Picsum: gambar acak berdasarkan ID (seed stabil per item)
+      const imgId    = (itemSeed * 7 + 13) % 1000;
+      return { id: itemSeed, cat, title, author, daysAgo, likes, imgId };
+    }
+
+    // Simulasi API fetch dengan latency acak
+    async function fakeApiFetch(page) {
+      const delay = 600 + Math.random() * 600;
+      await new Promise(r => setTimeout(r, delay));
+
+      // Simulasi error acak (kira2 5% chance) — bisa di-test dengan scroll cepat
+      // if (Math.random() < 0.05) throw new Error('Network error');
+
+      const PAGE_SIZE = 6;
+      return Array.from({ length: PAGE_SIZE }, () => generateItem());
+    }
+
+    // ─── State ───────────────────────────────────────────
+    const state = {
+      page:      0,
+      loading:   false,
+      done:      false,
+      totalLoaded: 0,
+      requestCount: 0,
+      ioEntries: 0,
+      maxPages:  7,  // total halaman (42 item, cukup untuk demo)
+    };
+
+    // ─── DOM Refs ─────────────────────────────────────────
+    const grid          = document.getElementById('card-grid');
+    const sentinel      = document.getElementById('sentinel');
+    const loadingEl     = document.getElementById('loading-indicator');
+    const loadMoreBtn   = document.getElementById('load-more-btn');
+    const loadMoreText  = document.getElementById('load-more-text');
+    const errorBox      = document.getElementById('error-box');
+    const retryBtn      = document.getElementById('retry-btn');
+    const endMessage    = document.getElementById('end-message');
+    const endTotalText  = document.getElementById('end-total-text');
+    const liveRegion    = document.getElementById('live-region');
+    const backToTop     = document.getElementById('back-to-top');
+    const toast         = document.getElementById('toast');
+    const itemCountLbl  = document.getElementById('item-count-label');
+    const headerCount   = document.getElementById('header-count');
+    const headerPage    = document.getElementById('header-page');
+    const dbgPage       = document.getElementById('dbg-page');
+    const dbgItems      = document.getElementById('dbg-items');
+    const dbgReq        = document.getElementById('dbg-req');
+    const dbgStatus     = document.getElementById('dbg-status');
+    const dbgIo         = document.getElementById('dbg-io');
+
+    // ─── Lazy Load Image Observer ─────────────────────────
+    const imgObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const img = entry.target;
+        const placeholder = img.previousElementSibling;
+
+        img.src = img.dataset.src;
+        img.addEventListener('load', () => {
+          img.classList.add('loaded');
+          if (placeholder) placeholder.classList.add('hidden');
+        }, { once: true });
+
+        imgObserver.unobserve(img); // penting: stop observing setelah trigger
+      });
+    }, {
+      rootMargin: '150px 0px', // preload 150px sebelum masuk viewport
+      threshold: 0.01,
+    });
+
+    // ─── Card Renderer ────────────────────────────────────
+    function renderCard(item) {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.setAttribute('aria-label', `${item.title} oleh ${item.author.name}`);
+
+      const catColor = CATEGORY_COLORS[item.cat] || '#6c63ff';
+
+      card.innerHTML = `
+        <div class="card-img">
+          <div class="img-placeholder skeleton-wave" aria-hidden="true"></div>
+          <img
+            data-src="https://picsum.photos/seed/${item.imgId}/480/270"
+            src=""
+            alt="Ilustrasi untuk artikel: ${item.title}"
+            width="480"
+            height="270"
+            loading="lazy"
+          />
+          <span class="badge" style="background:${catColor}22;color:${catColor};border:1px solid ${catColor}55;">
+            ${item.cat}
+          </span>
+          <button
+            class="btn-like"
+            aria-label="Suka artikel ${item.title}"
+            aria-pressed="false"
+            data-likes="${item.likes}"
+          >♡</button>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">
+            <a href="#item-${item.id}" tabindex="0">${item.title}</a>
+          </h3>
+          <div class="card-meta">
+            <div class="avatar" aria-hidden="true">${item.author.init}</div>
+            <span>${item.author.name}</span>
+            <span class="meta-dot" aria-hidden="true">·</span>
+            <span>${item.daysAgo}h lalu</span>
+            <span class="meta-dot" aria-hidden="true">·</span>
+            <span aria-label="${item.likes} suka">♡ ${item.likes}</span>
+          </div>
+        </div>
+      `;
+
+      // Setup lazy load untuk gambar di kartu ini
+      const img = card.querySelector('img[data-src]');
+      imgObserver.observe(img);
+
+      // Like button interaction
+      const likeBtn = card.querySelector('.btn-like');
+      likeBtn.addEventListener('click', () => {
+        const liked = likeBtn.getAttribute('aria-pressed') === 'true';
+        likeBtn.setAttribute('aria-pressed', (!liked).toString());
+        likeBtn.textContent = liked ? '♡' : '♥';
+        likeBtn.classList.toggle('liked', !liked);
+      });
+
+      return card;
+    }
+
+    // ─── Skeleton Placeholder ─────────────────────────────
+    function renderSkeletons(count = 6) {
+      const frags = [];
+      for (let i = 0; i < count; i++) {
+        const sk = document.createElement('div');
+        sk.className = 'skeleton-card';
+        sk.setAttribute('aria-hidden', 'true');
+        sk.innerHTML = `
+          <div class="skeleton-img skeleton-wave"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line skeleton-wave"></div>
+            <div class="skeleton-line skeleton-wave"></div>
+            <div class="skeleton-line skeleton-wave" style="width:60%"></div>
+          </div>
+        `;
+        frags.push(sk);
+      }
+      return frags;
+    }
+
+    // ─── Update debug panel ───────────────────────────────
+    function updateDebug(status) {
+      dbgPage.textContent   = state.page;
+      dbgItems.textContent  = state.totalLoaded;
+      dbgReq.textContent    = state.requestCount;
+      dbgStatus.textContent = status || (state.loading ? 'loading…' : 'idle');
+      dbgIo.textContent     = state.ioEntries;
+    }
+
+    // ─── Update counters & URL ────────────────────────────
+    function updateCounters() {
+      itemCountLbl.textContent = state.totalLoaded;
+      headerCount.textContent  = state.totalLoaded;
+      headerPage.textContent   = state.page;
+
+      // Preserve scroll position di URL (shallow)
+      try {
+        history.replaceState(null, '', `?page=${state.page}`);
+      } catch(e) {}
+    }
+
+    // ─── Show toast ───────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      clearTimeout(toastTimer);
+      toast.textContent = msg;
+      toast.classList.add('show');
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    // ─── Core: load next page ─────────────────────────────
+    async function loadNextPage() {
+      if (state.loading || state.done) return;
+
+      state.loading = true;
+      state.requestCount++;
+
+      // Hide load-more, show loading
+      loadMoreBtn.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+      errorBox.classList.remove('visible');
+      updateDebug('loading…');
+
+      // Tampilkan skeleton sementara menunggu data
+      const skeletons = renderSkeletons(6);
+      skeletons.forEach(sk => grid.appendChild(sk));
+
+      let items;
+      try {
+        items = await fakeApiFetch(state.page + 1);
+      } catch (err) {
+        // Error state
+        skeletons.forEach(sk => sk.remove());
+        loadingEl.classList.add('hidden');
+        errorBox.classList.add('visible');
+        liveRegion.textContent = 'Gagal memuat konten. Silakan coba lagi.';
+        state.loading = false;
+        updateDebug('error');
+        return;
+      }
+
+      // Hapus skeleton, masukkan data nyata
+      skeletons.forEach(sk => sk.remove());
+      loadingEl.classList.add('hidden');
+
+      state.page++;
+      state.totalLoaded += items.length;
+
+      // Render kartu ke grid
+      const fragment = document.createDocumentFragment();
+      items.forEach(item => fragment.appendChild(renderCard(item)));
+      grid.appendChild(fragment);
+
+      // Update ARIA live region (penting!)
+      liveRegion.textContent =
+        `${items.length} konten baru dimuat. Total ${state.totalLoaded} item.`;
+
+      updateCounters();
+      updateDebug('idle');
+      showToast(`✓ ${items.length} item dimuat (halaman ${state.page})`);
+
+      // Cek apakah sudah habis
+      if (state.page >= state.maxPages) {
+        state.done = true;
+        sentinel.style.display = 'none';
+        loadMoreBtn.classList.add('hidden');
+        endMessage.classList.add('visible');
+        endTotalText.textContent = `Total ${state.totalLoaded} item.`;
+        liveRegion.textContent =
+          `Semua konten telah ditampilkan. Total ${state.totalLoaded} item.`;
+        updateDebug('done');
+      } else {
+        // Tampilkan load-more button (hybrid)
+        const remaining = (state.maxPages - state.page) * 6;
+        loadMoreText.textContent = `Muat Lebih Banyak (${remaining} tersisa)`;
+        loadMoreBtn.classList.remove('hidden');
+      }
+
+      state.loading = false;
+    }
+
+    // ─── Sentinel Observer (auto-scroll trigger) ──────────
+    const scrollObserver = new IntersectionObserver((entries) => {
+      state.ioEntries++;
+      updateDebug();
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !state.loading && !state.done) {
+          loadNextPage();
+        }
+      });
+    }, {
+      rootMargin: '300px 0px', // trigger 300px sebelum sentinel kelihatan
+      threshold: 0,
+    });
+
+    scrollObserver.observe(sentinel);
+
+    // ─── Load More button handler ─────────────────────────
+    loadMoreBtn.addEventListener('click', loadNextPage);
+
+    // ─── Retry button ─────────────────────────────────────
+    retryBtn.addEventListener('click', loadNextPage);
+
+    // ─── Back to top ─────────────────────────────────────
+    window.addEventListener('scroll', () => {
+      backToTop.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Kembalikan focus ke awal konten untuk keyboard users
+      document.getElementById('card-grid').firstElementChild?.focus();
+    });
+
+    // ─── Filter pills ─────────────────────────────────────
+    document.querySelectorAll('.pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.pill').forEach(p => {
+          p.classList.remove('active');
+          p.setAttribute('aria-pressed', 'false');
+        });
+        pill.classList.add('active');
+        pill.setAttribute('aria-pressed', 'true');
+
+        const cat = pill.dataset.cat;
+        document.querySelectorAll('.card').forEach(card => {
+          const cardCat = card.querySelector('.badge')?.textContent?.trim();
+          card.style.display = (cat === 'all' || cardCat === cat) ? '' : 'none';
+        });
+
+        const visible = grid.querySelectorAll('.card:not([style*="none"])').length;
+        liveRegion.textContent =
+          cat === 'all'
+            ? `Menampilkan semua ${state.totalLoaded} item.`
+            : `Filter aktif: ${cat}. ${visible} item ditampilkan.`;
+      });
+    });
+
+    // ─── Load awal ────────────────────────────────────────
+    // IntersectionObserver akan trigger sendiri, tapi kita load awal manual
+    // untuk UX yang lebih baik (tidak harus scroll dulu)
+    loadNextPage();
+  </script>
+</body>
+</html>
