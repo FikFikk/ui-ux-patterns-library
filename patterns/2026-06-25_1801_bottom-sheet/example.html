@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bottom Sheet Demo — UI/UX Pattern Library</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      transition: filter 0.3s ease;
+    }
+
+    body.bottom-sheet-open {
+      overflow: hidden;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .demo-section {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .demo-section h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .demo-section p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: #48bb78;
+    }
+
+    .btn-secondary:hover {
+      background: #38a169;
+    }
+
+    .btn-tertiary {
+      background: #ed8936;
+    }
+
+    .btn-tertiary:hover {
+      background: #dd6b20;
+    }
+
+    /* Bottom Sheet Backdrop */
+    .bottom-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s;
+      z-index: 999;
+    }
+
+    .bottom-sheet-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Bottom Sheet Container */
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .bottom-sheet.active {
+      transform: translateY(0);
+    }
+
+    /* Handle (visual cue) */
+    .bottom-sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 12px auto 8px;
+      flex-shrink: 0;
+      cursor: grab;
+    }
+
+    .bottom-sheet-handle:active {
+      cursor: grabbing;
+    }
+
+    /* Header */
+    .bottom-sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .bottom-sheet-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #f5f5f5;
+    }
+
+    /* Content */
+    .bottom-sheet-content {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Action Items */
+    .action-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      width: 100%;
+      text-align: left;
+      background: white;
+      margin-bottom: 8px;
+    }
+
+    .action-item:hover {
+      background: #f7fafc;
+    }
+
+    .action-item:active {
+      background: #edf2f7;
+    }
+
+    .action-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .action-icon.blue { background: #ebf4ff; }
+    .action-icon.green { background: #e6fffa; }
+    .action-icon.orange { background: #feebc8; }
+    .action-icon.red { background: #fff5f5; }
+    .action-icon.purple { background: #faf5ff; }
+
+    .action-details {
+      flex: 1;
+    }
+
+    .action-title {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .action-desc {
+      font-size: 14px;
+      color: #718096;
+    }
+
+    /* Form in Bottom Sheet */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .form-actions .btn {
+      flex: 1;
+    }
+
+    .btn-outline {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .btn-outline:hover {
+      background: #f7fafc;
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .bottom-sheet {
+        max-width: 600px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100%);
+      }
+
+      .bottom-sheet.active {
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      .bottom-sheet,
+      .bottom-sheet-backdrop,
+      .btn {
+        transition: none;
+      }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #333;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 2000;
+      max-width: 90%;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Content List */
+    .content-list {
+      list-style: none;
+    }
+
+    .content-list li {
+      padding: 16px 0;
+      border-bottom: 1px solid #eee;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .content-list li:last-child {
+      border-bottom: none;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #667eea;
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🎭 Bottom Sheet Demo</h1>
+      <p>Pattern UI/UX Modern untuk Mobile-First Design</p>
+    </header>
+
+    <!-- Demo 1: Action Sheet -->
+    <div class="demo-section">
+      <h2>1. Action Sheet — Quick Actions</h2>
+      <p>Pattern paling umum untuk menampilkan daftar aksi yang bisa dilakukan pengguna. Cocok untuk sharing, export, atau menu kontekstual.</p>
+      <button class="btn" id="openActionSheet">
+        <span>📋</span> Tampilkan Action Sheet
+      </button>
+    </div>
+
+    <!-- Demo 2: Form in Bottom Sheet -->
+    <div class="demo-section">
+      <h2>2. Form Input — Data Entry</h2>
+      <p>Gunakan bottom sheet untuk form input yang tidak perlu full-page navigation. User tetap melihat konteks halaman di background.</p>
+      <button class="btn btn-secondary" id="openFormSheet">
+        <span>✏️</span> Buat Task Baru
+      </button>
+    </div>
+
+    <!-- Demo 3: Info/Detail Sheet -->
+    <div class="demo-section">
+      <h2>3. Detail View — Informasi Lengkap</h2>
+      <p>Tampilkan detail atau informasi tambahan tanpa navigasi penuh. Cocok untuk preview, detail produk, atau info place.</p>
+      <button class="btn btn-tertiary" id="openDetailSheet">
+        <span>ℹ️</span> Lihat Detail Pattern
+      </button>
+    </div>
+
+    <!-- Demo Content -->
+    <div class="demo-section">
+      <h2>💡 Tips Interaksi</h2>
+      <ul class="content-list">
+        <li><strong>Swipe Down:</strong> Geser bottom sheet ke bawah untuk menutup (mobile)</li>
+        <li><strong>Tap Backdrop:</strong> Klik area gelap di luar sheet untuk menutup</li>
+        <li><strong>Close Button:</strong> Klik tombol × di header</li>
+        <li><strong>Keyboard:</strong> Tekan ESC untuk menutup sheet</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Backdrop -->
+  <div class="bottom-sheet-backdrop" id="backdrop"></div>
+
+  <!-- Bottom Sheet 1: Action Sheet -->
+  <div class="bottom-sheet" id="actionSheet" role="dialog" aria-modal="true" aria-labelledby="actionSheetTitle">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-header">
+      <h2 id="actionSheetTitle">Pilih Aksi</h2>
+      <button class="close-btn" aria-label="Tutup">×</button>
+    </div>
+    <div class="bottom-sheet-content">
+      <button class="action-item" data-action="share">
+        <div class="action-icon blue">📤</div>
+        <div class="action-details">
+          <div class="action-title">Bagikan</div>
+          <div class="action-desc">Kirim ke teman atau sosial media</div>
+        </div>
+      </button>
+
+      <button class="action-item" data-action="download">
+        <div class="action-icon green">⬇️</div>
+        <div class="action-details">
+          <div class="action-title">Download</div>
+          <div class="action-desc">Simpan ke perangkat Anda</div>
+        </div>
+      </button>
+
+      <button class="action-item" data-action="copy">
+        <div class="action-icon purple">📋</div>
+        <div class="action-details">
+          <div class="action-title">Salin Link</div>
+          <div class="action-desc">Copy URL ke clipboard</div>
+        </div>
+      </button>
+
+      <button class="action-item" data-action="edit">
+        <div class="action-icon orange">✏️</div>
+        <div class="action-details">
+          <div class="action-title">Edit</div>
+          <div class="action-desc">Ubah konten atau pengaturan</div>
+        </div>
+      </button>
+
+      <button class="action-item" data-action="delete">
+        <div class="action-icon red">🗑️</div>
+        <div class="action-details">
+          <div class="action-title">Hapus</div>
+          <div class="action-desc">Pindahkan ke sampah</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet 2: Form -->
+  <div class="bottom-sheet" id="formSheet" role="dialog" aria-modal="true" aria-labelledby="formSheetTitle">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-header">
+      <h2 id="formSheetTitle">Buat Task Baru</h2>
+      <button class="close-btn" aria-label="Tutup">×</button>
+    </div>
+    <div class="bottom-sheet-content">
+      <form id="taskForm">
+        <div class="form-group">
+          <label for="taskTitle">Judul Task *</label>
+          <input type="text" id="taskTitle" placeholder="Misal: Review PR #123" required>
+        </div>
+
+        <div class="form-group">
+          <label for="taskPriority">Prioritas</label>
+          <select id="taskPriority">
+            <option value="low">Rendah</option>
+            <option value="medium" selected>Sedang</option>
+            <option value="high">Tinggi</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="taskDesc">Deskripsi</label>
+          <textarea id="taskDesc" placeholder="Detail task (opsional)"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" id="cancelForm">Batal</button>
+          <button type="submit" class="btn">Simpan Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet 3: Detail/Info -->
+  <div class="bottom-sheet" id="detailSheet" role="dialog" aria-modal="true" aria-labelledby="detailSheetTitle">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-header">
+      <h2 id="detailSheetTitle">Tentang Bottom Sheet</h2>
+      <button class="close-btn" aria-label="Tutup">×</button>
+    </div>
+    <div class="bottom-sheet-content">
+      <h3 style="margin-bottom: 12px; color: #333;">📱 Apa itu Bottom Sheet?</h3>
+      <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+        Bottom Sheet adalah komponen UI yang muncul dari bagian bawah layar, menampilkan konten atau aksi tambahan tanpa mengalihkan pengguna dari konteks saat ini.
+      </p>
+
+      <h3 style="margin-bottom: 12px; color: #333;">✨ Keunggulan</h3>
+      <ul class="content-list">
+        <li><strong>Thumb-Friendly:</strong> Mudah dijangkau dengan ibu jari di mobile</li>
+        <li><strong>Context Preservation:</strong> User tetap melihat halaman di background</li>
+        <li><strong>Gesture-Driven:</strong> Swipe untuk close terasa natural</li>
+        <li><strong>Progressive Disclosure:</strong> Tampilkan info bertahap</li>
+      </ul>
+
+      <h3 style="margin: 20px 0 12px; color: #333;">🎯 Digunakan Oleh</h3>
+      <p style="color: #666; line-height: 1.6;">
+        <strong>Google Maps</strong> (place details), 
+        <strong>Instagram</strong> (sharing), 
+        <strong>Spotify</strong> (now playing), 
+        <strong>Gmail</strong> (email actions), 
+        <strong>Tokopedia</strong> (filters)
+      </p>
+
+      <div style="margin-top: 24px; padding: 16px; background: #f7fafc; border-radius: 8px;">
+        <strong style="color: #333;">📚 Pelajari Lebih Lanjut</strong>
+        <p style="color: #666; margin-top: 8px; font-size: 14px;">
+          Baca dokumentasi lengkap di README.md untuk implementasi detail, accessibility guidelines, dan best practices.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Bottom Sheet Class
+    class BottomSheet {
+      constructor(sheetId) {
+        this.sheet = document.getElementById(sheetId);
+        this.backdrop = document.getElementById('backdrop');
+        this.startY = 0;
+        this.currentY = 0;
+        this.isDragging = false;
+        
+        this.init();
+      }
+      
+      init() {
+        // Close button
+        const closeBtn = this.sheet.querySelector('.close-btn');
+        closeBtn?.addEventListener('click', () => this.close());
+        
+        // Backdrop click
+        this.backdrop?.addEventListener('click', () => {
+          // Close semua sheets yang aktif
+          document.querySelectorAll('.bottom-sheet.active').forEach(sheet => {
+            const instance = bottomSheets.find(bs => bs.sheet === sheet);
+            instance?.close();
+          });
+        });
+        
+        // Touch events untuk swipe-to-dismiss
+        const handle = this.sheet.querySelector('.bottom-sheet-handle');
+        const header = this.sheet.querySelector('.bottom-sheet-header');
+        
+        [handle, header].forEach(element => {
+          element?.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+        });
+        
+        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+        document.addEventListener('touchend', this.handleTouchEnd.bind(this));
+        
+        // Keyboard accessibility
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.sheet.classList.contains('active')) {
+            this.close();
+          }
+        });
+      }
+      
+      open() {
+        // Close other sheets first
+        document.querySelectorAll('.bottom-sheet.active').forEach(sheet => {
+          if (sheet !== this.sheet) {
+            sheet.classList.remove('active');
+          }
+        });
+        
+        this.sheet.classList.add('active');
+        this.backdrop.classList.add('active');
+        document.body.classList.add('bottom-sheet-open');
+        
+        // Focus management
+        setTimeout(() => {
+          const firstFocusable = this.sheet.querySelector('button:not(.close-btn), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          firstFocusable?.focus();
+        }, 300);
+      }
+      
+      close() {
+        this.sheet.classList.remove('active');
+        
+        // Check if any other sheet is still open
+        const hasActiveSheet = document.querySelector('.bottom-sheet.active');
+        if (!hasActiveSheet) {
+          this.backdrop.classList.remove('active');
+          document.body.classList.remove('bottom-sheet-open');
+        }
+        
+        // Reset transform
+        this.sheet.style.transform = '';
+      }
+      
+      handleTouchStart(e) {
+        const content = this.sheet.querySelector('.bottom-sheet-content');
+        
+        // Don't allow swipe if content is scrolled
+        if (content && content.scrollTop > 0) return;
+        
+        this.startY = e.touches[0].clientY;
+        this.isDragging = true;
+      }
+      
+      handleTouchMove(e) {
+        if (!this.isDragging) return;
+        if (!this.sheet.classList.contains('active')) return;
+        
+        this.currentY = e.touches[0].clientY;
+        const diff = this.currentY - this.startY;
+        
+        // Only allow drag down
+        if (diff > 0) {
+          e.preventDefault();
+          this.sheet.style.transform = `translateY(${diff}px)`;
+          
+          // Add translateX for tablet/desktop centered layout
+          if (window.innerWidth >= 768) {
+            this.sheet.style.transform = `translateX(-50%) translateY(${diff}px)`;
+          }
+        }
+      }
+      
+      handleTouchEnd(e) {
+        if (!this.isDragging) return;
+        
+        const diff = this.currentY - this.startY;
+        const threshold = this.sheet.offsetHeight * 0.3;
+        
+        if (diff > threshold) {
+          this.close();
+        } else {
+          // Snap back
+          this.sheet.style.transform = '';
+        }
+        
+        this.isDragging = false;
+      }
+    }
+
+    // Initialize all bottom sheets
+    const bottomSheets = [
+      new BottomSheet('actionSheet'),
+      new BottomSheet('formSheet'),
+      new BottomSheet('detailSheet')
+    ];
+
+    // Toast notification helper
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Open Action Sheet
+    document.getElementById('openActionSheet')?.addEventListener('click', () => {
+      bottomSheets[0].open();
+    });
+
+    // Handle action items
+    document.querySelectorAll('#actionSheet .action-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const action = item.dataset.action;
+        const title = item.querySelector('.action-title').textContent;
+        
+        bottomSheets[0].close();
+        
+        setTimeout(() => {
+          showToast(`✓ Aksi "${title}" berhasil dijalankan`);
+        }, 300);
+      });
+    });
+
+    // Open Form Sheet
+    document.getElementById('openFormSheet')?.addEventListener('click', () => {
+      bottomSheets[1].open();
+    });
+
+    // Handle form submission
+    document.getElementById('taskForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('taskTitle').value;
+      const priority = document.getElementById('taskPriority').value;
+      
+      bottomSheets[1].close();
+      
+      setTimeout(() => {
+        showToast(`✓ Task "${title}" berhasil dibuat (${priority})`);
+        e.target.reset();
+      }, 300);
+    });
+
+    // Cancel form
+    document.getElementById('cancelForm')?.addEventListener('click', () => {
+      bottomSheets[1].close();
+    });
+
+    // Open Detail Sheet
+    document.getElementById('openDetailSheet')?.addEventListener('click', () => {
+      bottomSheets[2].open();
+    });
+
+    // Prevent body scroll when sheet is open
+    document.addEventListener('touchmove', (e) => {
+      if (document.body.classList.contains('bottom-sheet-open')) {
+        const activeSheet = document.querySelector('.bottom-sheet.active');
+        const content = activeSheet?.querySelector('.bottom-sheet-content');
+        
+        // Allow scroll only inside content area
+        if (content && content.contains(e.target)) {
+          return;
+        }
+        
+        // Prevent scroll on backdrop/outside
+        if (!activeSheet?.contains(e.target)) {
+          e.preventDefault();
+        }
+      }
+    }, { passive: false });
+  </script>
+
+</body>
+</html>
