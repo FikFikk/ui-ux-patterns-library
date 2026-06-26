@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessible OTP Input - Demo & Panduan UX</title>
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --border-focus: #4f46e5;
+      --success-color: #16a34a;
+      --error-color: #dc2626;
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      padding: 32px;
+      border: 1px solid #f1f5f9;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .header-logo svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .description {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 30px;
+    }
+
+    .target-phone {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Verification Form Styling */
+    .verification-form {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .otp-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .otp-label-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .otp-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .secure-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .secure-toggle-btn:hover {
+      background-color: #f1f5f9;
+    }
+
+    .otp-inputs {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .otp-input {
+      width: 100%;
+      height: 60px;
+      outline: none;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Menghapus arrow bawaan browser untuk mode number jika ada */
+      -moz-appearance: textfield;
+    }
+
+    .otp-input::-webkit-outer-spin-button,
+    .otp-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .otp-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+      background-color: #fff;
+    }
+
+    .otp-input.secure-masked {
+      -webkit-text-security: disc; /* Support Safari, Chrome, Edge */
+      font-family: inherit;
+    }
+
+    .otp-input.filled {
+      border-color: #94a3b8;
+    }
+
+    /* Message States */
+    .message-box {
+      min-height: 24px;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+    }
+
+    .message-box.error {
+      color: var(--error-color);
+    }
+
+    .message-box.success {
+      color: var(--success-color);
+    }
+
+    .message-box svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Action Buttons */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .btn-verify {
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-verify:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-verify:active {
+      transform: scale(0.98);
+    }
+
+    .btn-verify:disabled {
+      background-color: #cbd5e1;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .resend-container {
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .btn-resend {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0 4px;
+      transition: color 0.2s;
+    }
+
+    .btn-resend:hover {
+      color: var(--primary-hover);
+      text-decoration: underline;
+    }
+
+    .btn-resend:disabled {
+      color: var(--text-muted);
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+
+    /* Info Panel for Educational Purposes */
+    .edu-panel {
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .edu-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .edu-list {
+      list-style-type: none;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .edu-list li {
+      position: relative;
+      padding-left: 16px;
+    }
+
+    .edu-list li::before {
+      content: "•";
+      color: var(--primary-color);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+
+    .keyboard-badge {
+      display: inline-block;
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--text-main);
+      border-bottom: 2px solid #cbd5e1;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+      
+      .otp-inputs {
+        gap: 6px;
+      }
+      
+      .otp-input {
+        height: 50px;
+        font-size: 1.5rem;
+        border-radius: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span>DokuGate Secure Verification</span>
+    </div>
+
+    <h1>Masukkan Kode Verifikasi</h1>
+    <p class="description">Kami telah mengirimkan kode verifikasi 6 digit ke nomor ponsel <span class="target-phone">+62 812-3456-7890</span>. Kode demo valid adalah <strong style="color: var(--primary-color)">123456</strong>.</p>
+
+    <form class="verification-form" id="otp-form" novalidate>
+      <div class="otp-wrapper">
+        <div class="otp-label-container">
+          <label class="otp-label" id="otp-group-label" for="otp-input-1">Kode OTP 6-Digit</label>
+          <button type="button" class="secure-toggle-btn" id="secure-toggle" aria-pressed="false">
+            Sembunyikan Karakter
+          </button>
+        </div>
+        
+        <!-- Accessible OTP Input Group -->
+        <div class="otp-inputs" role="group" aria-labelledby="otp-group-label" id="otp-group">
+          <input type="text" id="otp-input-1" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit ke-1 dari 6" autofocus required>
+          <input type="text" id="otp-input-2" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" aria-label="Digit ke-2 dari 6" required>
+          <input type="text" id="otp-input-3" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" aria-label="Digit ke-3 dari 6" required>
+          <input type="text" id="otp-input-4" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" aria-label="Digit ke-4 dari 6" required>
+          <input type="text" id="otp-input-5" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" aria-label="Digit ke-5 dari 6" required>
+          <input type="text" id="otp-input-6" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" aria-label="Digit ke-6 dari 6" required>
+        </div>
+      </div>
+
+      <div class="message-box" id="message-container" role="status" aria-live="polite">
+        <!-- Status error atau sukses dimuat di sini secara dinamis -->
+      </div>
+
+      <div class="button-group">
+        <button type="submit" class="btn-verify" id="btn-submit">
+          <span class="spinner" id="btn-spinner"></span>
+          <span id="btn-text">Verifikasi Kode</span>
+        </button>
+        
+        <div class="resend-container">
+          Kirim ulang kode dalam <span id="timer-text" style="font-weight: 600;">00:30</span>
+          <button type="button" class="btn-resend" id="btn-resend" disabled>
+            Kirim Ulang OTP
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Educational & Accessibility Guidelines Info Panel -->
+    <div class="edu-panel">
+      <div class="edu-title">
+        <svg style="width:18px;height:18px;color:var(--primary-color);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Fitur Aksesibilitas & UX Interaktif (Untuk Developer)
+      </div>
+      <ul class="edu-list">
+        <li><strong>Fokus Otomatis Maju-Mundur:</strong> Fokus berpindah secara cerdas ke input berikutnya setelah mengetik, atau ke input sebelumnya saat menekan tombol <span class="keyboard-badge">Backspace</span>.</li>
+        <li><strong>Pencegahan Lompatan Salah:</strong> Mengklik sembarang input kosong di tengah akan otomatis memfokuskan field kosong pertama.</li>
+        <li><strong>Fungsi Paste Tangguh:</strong> Salin angka 6-digit (termasuk strip seperti 123-456 atau teks acak), paste di kotak manapun, kotak otomatis terisi berurutan tanpa menduplikasi kolom.</li>
+        <li><strong>Navigasi Panah Keyboard:</strong> Gunakan panah <span class="keyboard-badge">←</span> dan <span class="keyboard-badge">→</span> untuk berpindah kolom secara natural.</li>
+        <li><strong>Screen Reader-Friendly:</strong> Setiap kolom input memiliki atribut <code>aria-label</code> eksplisit (misal: "Digit ke-1 dari 6"). Hasil status verifikasi dikumpulkan dalam kontainer dengan <code>aria-live="polite"</code>.</li>
+        <li><strong>Autofill One-Time-Code:</strong> Atribut <code>autocomplete="one-time-code"</code> diaktifkan pada field pertama untuk integrasi autofill SMS iOS/Android dan Chrome modern.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('.otp-input');
+      const form = document.getElementById('otp-form');
+      const submitBtn = document.getElementById('btn-submit');
+      const spinner = document.getElementById('btn-spinner');
+      const btnText = document.getElementById('btn-text');
+      const messageContainer = document.getElementById('message-container');
+      const secureToggle = document.getElementById('secure-toggle');
+      const resendBtn = document.getElementById('btn-resend');
+      const timerText = document.getElementById('timer-text');
+      
+      let timerDuration = 30;
+      let timerInterval;
+
+      // Jalankan Timer Kirim Ulang saat load
+      startResendTimer();
+
+      // Set focus ke digit pertama setelah 100ms
+      setTimeout(() => {
+        inputs[0].focus();
+      }, 100);
+
+      // Status visual masker input
+      let isMasked = false;
+      secureToggle.addEventListener('click', () => {
+        isMasked = !isMasked;
+        inputs.forEach(input => {
+          if (isMasked) {
+            input.classList.add('secure-masked');
+          } else {
+            input.classList.remove('secure-masked');
+          }
+        });
+        secureToggle.setAttribute('aria-pressed', isMasked);
+        secureToggle.textContent = isMasked ? 'Tampilkan Karakter' : 'Sembunyikan Karakter';
+      });
+
+      // Menambahkan trigger status 'filled' untuk styling border CSS
+      function updateInputStyle(input) {
+        if (input.value.length > 0) {
+          input.classList.add('filled');
+        } else {
+          input.classList.remove('filled');
+        }
+      }
+
+      // Check if all fields are filled
+      function checkFullInput() {
+        const allFilled = Array.from(inputs).every(input => input.value.length === 1);
+        submitBtn.disabled = !allFilled;
+        return allFilled;
+      }
+
+      // Pastikan button diuji setiap saat
+      checkFullInput();
+
+      inputs.forEach((input, index) => {
+        // Hanya izinkan angka 0-9
+        input.addEventListener('input', (e) => {
+          const originalVal = e.target.value;
+          const cleanVal = originalVal.replace(/[^0-9]/g, '');
+          e.target.value = cleanVal;
+
+          updateInputStyle(e.target);
+
+          // Pindah fokus ke kanan jika input berhasil diisi
+          if (cleanVal.length === 1) {
+            if (index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          }
+          checkFullInput();
+        });
+
+        // Event penanganan keyboard khusus (Backspace dan Navigation Panah)
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace') {
+            if (e.target.value.length === 0) {
+              // Jika kosong, kembali ke input sebelumnya dan bersihkan
+              if (index > 0) {
+                inputs[index - 1].focus();
+                inputs[index - 1].value = '';
+                updateInputStyle(inputs[index - 1]);
+                checkFullInput();
+              }
+            } else {
+              // Jika berisi, hapus isinya sendiri secara default browser
+              e.target.value = '';
+              updateInputStyle(e.target);
+              checkFullInput();
+            }
+            e.preventDefault(); // Mencegah double action
+          } else if (e.key === 'ArrowLeft') {
+            if (index > 0) {
+              inputs[index - 1].focus();
+              e.preventDefault();
+            }
+          } else if (e.key === 'ArrowRight') {
+            if (index < inputs.length - 1) {
+              inputs[index + 1].focus();
+              e.preventDefault();
+            }
+          }
+        });
+
+        // Mencegah pengetikan berulang di kotak yang sama (jika keyboard error)
+        input.addEventListener('keypress', (e) => {
+          // Hanya izinkan angka, tolak non-angka
+          if (e.key < '0' || e.key > '9') {
+            e.preventDefault();
+          }
+        });
+
+        // Menghindari fokus melompat sembarangan ke kotak kanan jika kirinya kosong
+        input.addEventListener('click', () => {
+          for (let i = 0; i < index; i++) {
+            if (inputs[i].value === '') {
+              inputs[i].focus();
+              break;
+            }
+          }
+        });
+
+        // Clipboard Paste Handling
+        input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+          
+          // Ambil hanya digit angka
+          const digits = pasteData.replace(/[^0-9]/g, '').split('');
+
+          if (digits.length > 0) {
+            // Tentukan input target mulai dari box pertama
+            let startIdx = 0;
+            
+            // Masukkan angka ke kolom satu persatu
+            digits.forEach((digit, i) => {
+              const targetIdx = startIdx + i;
+              if (targetIdx < inputs.length) {
+                inputs[targetIdx].value = digit;
+                updateInputStyle(inputs[targetIdx]);
+              }
+            });
+
+            // Fokus dipindahkan ke input kosong selanjutnya atau yang terakhir
+            const nextEmptyIdx = Array.from(inputs).findIndex(inp => inp.value === '');
+            if (nextEmptyIdx !== -1) {
+              inputs[nextEmptyIdx].focus();
+            } else {
+              inputs[inputs.length - 1].focus();
+            }
+            
+            checkFullInput();
+          }
+        });
+      });
+
+      // Submit Form Simulation
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const isFull = checkFullInput();
+        if (!isFull) return;
+
+        // Ambil string OTP yang digabungkan
+        const otpValue = Array.from(inputs).map(input => input.value).join('');
+
+        // Tampilkan State Loading Spinner
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+        btnText.textContent = 'Memverifikasi...';
+        clearMessage();
+
+        // Simulasi network request delay 1.5 detik
+        setTimeout(() => {
+          spinner.style.display = 'none';
+          btnText.textContent = 'Verifikasi Kode';
+          submitBtn.disabled = false;
+
+          // Validasi OTP
+          if (otpValue === '123456') {
+            showSuccess('Verifikasi berhasil! Anda akan dialihkan sebentar lagi.');
+            inputs.forEach(input => {
+              input.style.borderColor = 'var(--success-color)';
+              input.style.backgroundColor = '#f0fdf4';
+            });
+          } else {
+            showError('Kode OTP salah atau kedaluwarsa. Silakan periksa kembali.');
+            inputs.forEach(input => {
+              input.style.borderColor = 'var(--error-color)';
+              input.style.backgroundColor = '#fef2f2';
+            });
+            // Auto focus ke digit pertama untuk perbaikan input
+            setTimeout(() => {
+              inputs[0].focus();
+            }, 100);
+          }
+        }, 1500);
+      });
+
+      // Helper untuk menampilkan notifikasi sukses
+      function showSuccess(msg) {
+        messageContainer.className = 'message-box success';
+        messageContainer.innerHTML = `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <span>${msg}</span>
+        `;
+      }
+
+      // Helper untuk menampilkan notifikasi error
+      function showError(msg) {
+        messageContainer.className = 'message-box error';
+        messageContainer.innerHTML = `
+          <svg fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <span>${msg}</span>
+        `;
+      }
+
+      // Helper untuk membersihkan notifikasi
+      function clearMessage() {
+        messageContainer.innerHTML = '';
+        messageContainer.className = 'message-box';
+      }
+
+      // Keyboard & Input cleanups saat user mengetik kembali setelah error
+      inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+          // Bersihkan warna merah error jika sedang mengetik ulang kodenya
+          if (messageContainer.classList.contains('error')) {
+            clearMessage();
+            inputs.forEach(inp => {
+              inp.style.borderColor = '';
+              inp.style.backgroundColor = '';
+            });
+          }
+        });
+      });
+
+      // countdown Timer Handling
+      function startResendTimer() {
+        timerDuration = 30;
+        resendBtn.disabled = true;
+        resendBtn.style.display = 'none';
+        timerText.parentElement.style.display = 'inline';
+        
+        timerText.textContent = `00:${timerDuration < 10 ? '0' : ''}${timerDuration}`;
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          timerDuration--;
+          timerText.textContent = `00:${timerDuration < 10 ? '0' : ''}${timerDuration}`;
+
+          if (timerDuration <= 0) {
+            clearInterval(timerInterval);
+            timerText.parentElement.style.display = 'none';
+            resendBtn.disabled = false;
+            resendBtn.style.display = 'inline-block';
+          }
+        }, 1000);
+      }
+
+      // Event trigger Kirim Ulang OTP
+      resendBtn.addEventListener('click', () => {
+        // Simulasi kirim OTP baru
+        showSuccess('Kode OTP baru telah dikirimkan ke ponsel Anda.');
+        
+        // Reset inputs
+        inputs.forEach(inp => {
+          inp.value = '';
+          updateInputStyle(inp);
+          inp.style.borderColor = '';
+          inp.style.backgroundColor = '';
+        });
+        checkFullInput();
+        setTimeout(() => {
+          inputs[0].focus();
+        }, 100);
+
+        startResendTimer();
+      });
+    });
+  </script>
+</body>
+</html>
