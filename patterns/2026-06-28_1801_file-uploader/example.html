@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessible File Upload Zone Demo</title>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #93c5fd;
+      --success-color: #16a34a;
+      --success-light: #f0fdf4;
+      --error-color: #dc2626;
+      --error-light: #fef2f2;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-900: #0f172a;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius-lg: 12px;
+      --radius-md: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f3f4f6;
+      color: var(--gray-900);
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: var(--gray-600);
+      font-size: 0.95rem;
+    }
+
+    /* Drop Zone Styling */
+    .drop-zone {
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background-color: var(--gray-50);
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+      position: relative;
+      outline: none;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--primary-color);
+      background-color: var(--primary-light);
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--primary-color);
+      background-color: var(--primary-light);
+      transform: scale(1.01);
+      border-style: solid;
+    }
+
+    .drop-zone:focus-visible {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    .upload-icon-wrapper {
+      width: 56px;
+      height: 56px;
+      background-color: #e0e7ff;
+      color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem auto;
+      transition: transform 0.2s ease;
+    }
+
+    .drop-zone:hover .upload-icon-wrapper,
+    .drop-zone.drag-over .upload-icon-wrapper {
+      transform: translateY(-4px);
+    }
+
+    .upload-icon {
+      width: 28px;
+      height: 28px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .drop-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--gray-900);
+      margin-bottom: 0.35rem;
+    }
+
+    .browse-link {
+      color: var(--primary-color);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .drop-subtitle {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+    }
+
+    /* File List Container */
+    .file-list-section {
+      margin-top: 2rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .file-count-badge {
+      background-color: var(--gray-200);
+      color: var(--gray-700);
+      font-size: 0.75rem;
+      padding: 0.15rem 0.6rem;
+      border-radius: 9999px;
+    }
+
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background-color: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s ease;
+    }
+
+    .file-item.error {
+      border-color: var(--error-color);
+      background-color: var(--error-light);
+    }
+
+    .file-item.success {
+      border-color: var(--gray-200);
+    }
+
+    .file-preview {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background-color: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .file-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .file-icon {
+      width: 24px;
+      height: 24px;
+      color: var(--gray-600);
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .file-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+
+    .file-size {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      flex-shrink: 0;
+    }
+
+    /* Progress Bar */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background-color: var(--gray-200);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary-color);
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    .file-item.success .progress-bar-fill {
+      background-color: var(--success-color);
+    }
+
+    .error-message {
+      font-size: 0.8rem;
+      color: var(--error-color);
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 0.4rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .remove-btn:hover {
+      color: var(--error-color);
+      background-color: var(--gray-100);
+    }
+
+    .remove-btn:focus-visible {
+      outline: 2px solid var(--error-color);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray-400);
+      font-size: 0.9rem;
+      border: 1px dashed var(--gray-200);
+      border-radius: var(--radius-md);
+    }
+
+    .actions-section {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.65rem 1.35rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-secondary {
+      background-color: #fff;
+      border-color: var(--gray-300);
+      color: var(--gray-700);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--gray-50);
+      border-color: var(--gray-400);
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Upload Lampiran Dokumen</h1>
+      <p class="subtitle">Unggah berkas lisensi atau fotokopi identitas Anda di bawah ini</p>
+    </header>
+
+    <main>
+      <form id="upload-form" onsubmit="event.preventDefault();">
+        <!-- Accessible Drop Zone -->
+        <div 
+          id="drop-zone" 
+          class="drop-zone" 
+          tabindex="0" 
+          role="button" 
+          aria-label="Area pengunggahan berkas. Tekan Enter atau Spasi untuk memilih berkas dari komputer, atau seret berkas ke area ini."
+        >
+          <input 
+            type="file" 
+            id="file-input" 
+            multiple 
+            accept="image/png, image/jpeg, application/pdf" 
+            class="sr-only" 
+            tabindex="-1"
+          />
+          
+          <div class="drop-zone-content">
+            <div class="upload-icon-wrapper">
+              <svg class="upload-icon" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <p class="drop-title">Seret & lepas berkas di sini, atau <span class="browse-link">telusuri file</span></p>
+            <p class="drop-subtitle">Mendukung format PNG, JPG, PDF (Maksimal 5 MB per berkas)</p>
+          </div>
+        </div>
+
+        <!-- Daftar Berkas Terunggah -->
+        <section class="file-list-section" aria-labelledby="file-list-heading">
+          <div class="section-title">
+            <h2 id="file-list-heading" style="font-size: 1rem;">Berkas Terpilih</h2>
+            <span id="file-count" class="file-count-badge">0 Berkas</span>
+          </div>
+
+          <div id="file-list" class="file-list" aria-live="polite">
+            <div class="empty-state" id="empty-state">Belum ada berkas yang dipilih</div>
+          </div>
+        </section>
+
+        <!-- Tombol Aksi Formulir -->
+        <div class="actions-section">
+          <button type="button" id="clear-all-btn" class="btn btn-secondary" disabled>Hapus Semua</button>
+          <button type="submit" id="submit-btn" class="btn btn-primary" disabled>Simpan & Kirim</button>
+        </div>
+      </form>
+
+      <!-- Announcer Khusus Screen Reader (A11y Live Region) -->
+      <div id="upload-announcer" class="sr-only" role="status" aria-live="assertive"></div>
+    </main>
+  </div>
+
+  <script>
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'application/pdf'];
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileListContainer = document.getElementById('file-list');
+    const emptyState = document.getElementById('empty-state');
+    const fileCountBadge = document.getElementById('file-count');
+    const announcer = document.getElementById('upload-announcer');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let uploadedFiles = [];
+
+    // Trigger File Explorer via click/keyboard pada drop zone
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+      fileInput.value = ''; // Reset input
+    });
+
+    // Event handling drag and drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('drag-over');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drag-over');
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      handleFiles(files);
+    });
+
+    function handleFiles(files) {
+      if (!files.length) return;
+      
+      const newFiles = Array.from(files);
+      let addedCount = 0;
+
+      newFiles.forEach(file => {
+        const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const fileObj = {
+          id: fileId,
+          file: file,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          progress: 0,
+          status: 'uploading', // 'uploading', 'success', 'error'
+          errorMessage: ''
+        };
+
+        // Validasi
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          fileObj.status = 'error';
+          fileObj.errorMessage = 'Format berkas tidak didukung (Gunakan PNG, JPG, PDF)';
+        } else if (file.size > MAX_FILE_SIZE) {
+          fileObj.status = 'error';
+          fileObj.errorMessage = 'Ukuran berkas melebihi batas maksimum 5 MB';
+        }
+
+        uploadedFiles.push(fileObj);
+        addedCount++;
+        renderFileItem(fileObj);
+
+        if (fileObj.status === 'uploading') {
+          simulateUpload(fileObj);
+        }
+      });
+
+      updateUIState();
+      announceToScreenReader(`${addedCount} berkas ditambahkan.`);
+    }
+
+    function simulateUpload(fileObj) {
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += Math.floor(Math.random() * 25) + 15;
+        if (currentProgress >= 100) {
+          currentProgress = 100;
+          fileObj.progress = 100;
+          fileObj.status = 'success';
+          clearInterval(interval);
+          updateFileDOM(fileObj);
+          announceToScreenReader(`Pengunggahan berkas ${fileObj.name} selesai.`);
+          updateUIState();
+        } else {
+          fileObj.progress = currentProgress;
+          updateFileDOM(fileObj);
+        }
+      }, 200);
+    }
+
+    function renderFileItem(fileObj) {
+      if (emptyState && emptyState.parentNode) {
+        emptyState.remove();
+      }
+
+      const itemEl = document.createElement('div');
+      itemEl.className = `file-item ${fileObj.status}`;
+      itemEl.id = `item-${fileObj.id}`;
+
+      // Preview icon or image
+      let previewHtml = '';
+      if (fileObj.type.startsWith('image/')) {
+        const imageUrl = URL.createObjectURL(fileObj.file);
+        previewHtml = `<img src="${imageUrl}" alt="Pratinjau ${fileObj.name}" />`;
+      } else {
+        previewHtml = `
+          <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+        `;
+      }
+
+      itemEl.innerHTML = `
+        <div class="file-preview">${previewHtml}</div>
+        <div class="file-info">
+          <div class="file-name-row">
+            <span class="file-name" title="${fileObj.name}">${fileObj.name}</span>
+            <span class="file-size">${formatFileSize(fileObj.size)}</span>
+          </div>
+          <div class="progress-bar-container" role="progressbar" aria-valuenow="${fileObj.progress}" aria-valuemin="0" aria-valuemax="100" aria-label="Status pengunggahan ${fileObj.name}">
+            <div class="progress-bar-fill" style="width: ${fileObj.progress}%;"></div>
+          </div>
+          ${fileObj.errorMessage ? `<div class="error-message">
+            <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            ${fileObj.errorMessage}
+          </div>` : ''}
+        </div>
+        <button 
+          type="button" 
+          class="remove-btn" 
+          aria-label="Hapus berkas ${fileObj.name}"
+          onclick="removeFile('${fileObj.id}')"
+        >
+          <svg style="width:20px;height:20px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      `;
+
+      fileListContainer.appendChild(itemEl);
+    }
+
+    function updateFileDOM(fileObj) {
+      const itemEl = document.getElementById(`item-${fileObj.id}`);
+      if (!itemEl) return;
+
+      itemEl.className = `file-item ${fileObj.status}`;
+      const progressBar = itemEl.querySelector('.progress-bar-fill');
+      const progressContainer = itemEl.querySelector('.progress-bar-container');
+      
+      if (progressBar) progressBar.style.width = `${fileObj.progress}%`;
+      if (progressContainer) progressContainer.setAttribute('aria-valuenow', fileObj.progress);
+    }
+
+    function removeFile(fileId) {
+      const index = uploadedFiles.findIndex(f => f.id === fileId);
+      if (index !== -1) {
+        const fileName = uploadedFiles[index].name;
+        uploadedFiles.splice(index, 1);
+        
+        const itemEl = document.getElementById(`item-${fileId}`);
+        if (itemEl) itemEl.remove();
+
+        announceToScreenReader(`Berkas ${fileName} telah dihapus.`);
+        updateUIState();
+      }
+    }
+
+    clearAllBtn.addEventListener('click', () => {
+      uploadedFiles = [];
+      fileListContainer.innerHTML = '';
+      fileListContainer.appendChild(emptyState);
+      announceToScreenReader('Semua berkas dihapus.');
+      updateUIState();
+    });
+
+    function updateUIState() {
+      const validFiles = uploadedFiles.filter(f => f.status === 'success');
+      const count = uploadedFiles.length;
+
+      fileCountBadge.textContent = `${count} Berkas`;
+      
+      if (count === 0) {
+        if (!fileListContainer.contains(emptyState)) {
+          fileListContainer.appendChild(emptyState);
+        }
+        clearAllBtn.disabled = true;
+        submitBtn.disabled = true;
+      } else {
+        clearAllBtn.disabled = false;
+        submitBtn.disabled = validFiles.length === 0;
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function announceToScreenReader(message) {
+      announcer.textContent = '';
+      setTimeout(() => {
+        announcer.textContent = message;
+      }, 50);
+    }
+  </script>
+</body>
+</html>
