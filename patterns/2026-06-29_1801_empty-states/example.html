@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empty States Pattern - Demo Interaktif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .demo-controls button {
+            padding: 12px 24px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-controls button:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .demo-controls button.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .empty-state__illustration {
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .empty-state__illustration svg {
+            width: 200px;
+            height: 200px;
+        }
+
+        .empty-state__title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .empty-state__description {
+            font-size: 16px;
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .empty-state__actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+        }
+
+        .link-text {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 8px;
+            display: inline-block;
+            transition: opacity 0.3s ease;
+        }
+
+        .link-text:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
+        /* Success state for demonstration */
+        .success-state {
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .success-state__icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            animation: successPop 0.5s ease-out;
+        }
+
+        @keyframes successPop {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-state__icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+        }
+
+        .success-state h2 {
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .success-state p {
+            color: #718096;
+            margin-bottom: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 30px 20px;
+            }
+
+            .empty-state__illustration svg {
+                width: 150px;
+                height: 150px;
+            }
+
+            .empty-state__title {
+                font-size: 20px;
+            }
+
+            .empty-state__description {
+                font-size: 14px;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
+
+        /* Accessibility */
+        .btn:focus,
+        .link-text:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Empty States Pattern</h1>
+        <p>Pilih skenario di bawah untuk melihat contoh implementasi</p>
+    </div>
+
+    <div class="demo-controls">
+        <button onclick="showState('first-use')" class="active">First Use</button>
+        <button onclick="showState('user-cleared')">User Cleared</button>
+        <button onclick="showState('no-results')">No Results</button>
+        <button onclick="showState('error')">Error State</button>
+    </div>
+
+    <div class="container" id="stateContainer" role="main">
+        <!-- State akan diisi oleh JavaScript -->
+    </div>
+
+    <script>
+        const states = {
+            'first-use': {
+                illustration: `
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="80" fill="#EDF2F7"/>
+                        <path d="M60 100h80M100 60v80" stroke="#667eea" stroke-width="8" stroke-linecap="round"/>
+                        <circle cx="100" cy="100" r="90" stroke="#667eea" stroke-width="2" stroke-dasharray="8 8" opacity="0.3"/>
+                    </svg>
+                `,
+                title: 'Belum ada proyek',
+                description: 'Buat proyek pertama Anda dan mulai berkolaborasi dengan tim. Kelola tugas, timeline, dan deliverables dalam satu tempat.',
+                primaryCta: 'Buat Proyek Baru',
+                secondaryCta: 'Lihat Template',
+                helpLink: 'Pelajari cara membuat proyek',
+                ariaLabel: 'Belum ada proyek yang dibuat'
+            },
+            'user-cleared': {
+                illustration: `
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="80" fill="#F0FFF4"/>
+                        <path d="M70 100l20 20 40-40" stroke="#48BB78" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="100" cy="100" r="70" stroke="#48BB78" stroke-width="3"/>
+                    </svg>
+                `,
+                title: 'Semua tugas selesai! 🎉',
+                description: 'Kerja bagus! Anda telah menyelesaikan semua tugas. Saatnya istirahat sejenak atau mulai tugas baru.',
+                primaryCta: 'Tambah Tugas Baru',
+                secondaryCta: 'Lihat Arsip',
+                helpLink: null,
+                ariaLabel: 'Semua tugas telah diselesaikan'
+            },
+            'no-results': {
+                illustration: `
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="80" cy="80" r="40" stroke="#A0AEC0" stroke-width="6"/>
+                        <path d="M110 110l30 30" stroke="#A0AEC0" stroke-width="6" stroke-linecap="round"/>
+                        <line x1="60" y1="80" x2="100" y2="80" stroke="#A0AEC0" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                title: 'Tidak ada hasil ditemukan',
+                description: 'Coba gunakan kata kunci yang berbeda atau kurangi filter pencarian Anda. Pastikan penulisan sudah benar.',
+                primaryCta: 'Reset Pencarian',
+                secondaryCta: 'Hapus Semua Filter',
+                helpLink: 'Tips pencarian efektif',
+                ariaLabel: 'Tidak ada hasil pencarian yang ditemukan'
+            },
+            'error': {
+                illustration: `
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="80" fill="#FFF5F5"/>
+                        <circle cx="100" cy="100" r="60" stroke="#F56565" stroke-width="6"/>
+                        <path d="M100 70v40M100 130v8" stroke="#F56565" stroke-width="6" stroke-linecap="round"/>
+                    </svg>
+                `,
+                title: 'Gagal memuat data',
+                description: 'Terjadi kesalahan saat memuat konten. Periksa koneksi internet Anda dan coba lagi dalam beberapa saat.',
+                primaryCta: 'Coba Lagi',
+                secondaryCta: 'Laporkan Masalah',
+                helpLink: 'Status sistem',
+                ariaLabel: 'Terjadi kesalahan saat memuat data'
+            }
+        };
+
+        function showState(stateType) {
+            const state = states[stateType];
+            const container = document.getElementById('stateContainer');
+            
+            // Update active button
+            document.querySelectorAll('.demo-controls button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Build HTML
+            const helpLinkHtml = state.helpLink 
+                ? `<a href="#" class="link-text" onclick="handleHelpClick(event)">${state.helpLink}</a>`
+                : '';
+
+            container.innerHTML = `
+                <div class="empty-state" role="status" aria-live="polite" aria-label="${state.ariaLabel}">
+                    <div class="empty-state__illustration" aria-hidden="true">
+                        ${state.illustration}
+                    </div>
+                    <h2 class="empty-state__title">${state.title}</h2>
+                    <p class="empty-state__description">${state.description}</p>
+                    <div class="empty-state__actions">
+                        <button class="btn btn-primary" onclick="handlePrimaryAction('${stateType}')">
+                            ${state.primaryCta}
+                        </button>
+                        <button class="btn btn-secondary" onclick="handleSecondaryAction('${stateType}')">
+                            ${state.secondaryCta}
+                        </button>
+                        ${helpLinkHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function handlePrimaryAction(stateType) {
+            const container = document.getElementById('stateContainer');
+            
+            if (stateType === 'user-cleared') {
+                // Show success feedback
+                container.innerHTML = `
+                    <div class="success-state">
+                        <div class="success-state__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <h2>Tugas baru ditambahkan!</h2>
+                        <p>Tugas Anda telah berhasil dibuat dan siap untuk dikerjakan.</p>
+                        <button class="btn btn-primary" onclick="location.reload()">
+                            Kembali ke Demo
+                        </button>
+                    </div>
+                `;
+            } else if (stateType === 'error') {
+                // Simulate retry
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__illustration">
+                            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="100" cy="100" r="40" stroke="#667eea" stroke-width="6" stroke-dasharray="0 251.2" opacity="0.3">
+                                    <animate attributeName="stroke-dasharray" values="0 251.2;188.4 62.8;0 251.2" dur="1.5s" repeatCount="indefinite"/>
+                                    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="1s" repeatCount="indefinite"/>
+                                </circle>
+                            </svg>
+                        </div>
+                        <h2 class="empty-state__title">Memuat ulang...</h2>
+                        <p class="empty-state__description">Mohon tunggu sebentar</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    showSuccessLoad();
+                }, 2000);
+            } else {
+                alert(`Action: ${states[stateType].primaryCta}\n\nDalam implementasi nyata, ini akan membuka form atau dialog untuk aksi tersebut.`);
+            }
+        }
+
+        function handleSecondaryAction(stateType) {
+            if (stateType === 'no-results') {
+                showState('first-use');
+            } else {
+                alert(`Action: ${states[stateType].secondaryCta}\n\nDalam implementasi nyata, ini akan menjalankan aksi sekunder.`);
+            }
+        }
+
+        function handleHelpClick(event) {
+            event.preventDefault();
+            alert('Dalam implementasi nyata, ini akan membuka help center atau dokumentasi.');
+        }
+
+        function showSuccessLoad() {
+            const container = document.getElementById('stateContainer');
+            container.innerHTML = `
+                <div class="success-state">
+                    <div class="success-state__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <h2>Berhasil dimuat!</h2>
+                    <p>Konten telah berhasil dimuat dan siap ditampilkan.</p>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        Kembali ke Demo
+                    </button>
+                </div>
+            `;
+        }
+
+        // Initialize with first-use state
+        window.addEventListener('DOMContentLoaded', () => {
+            showState('first-use');
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            const buttons = document.querySelectorAll('.demo-controls button');
+            const activeButton = document.querySelector('.demo-controls button.active');
+            const currentIndex = Array.from(buttons).indexOf(activeButton);
+
+            if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                buttons[currentIndex - 1].click();
+                buttons[currentIndex - 1].focus();
+            } else if (e.key === 'ArrowRight' && currentIndex < buttons.length - 1) {
+                buttons[currentIndex + 1].click();
+                buttons[currentIndex + 1].focus();
+            }
+        });
+    </script>
+</body>
+</html>
